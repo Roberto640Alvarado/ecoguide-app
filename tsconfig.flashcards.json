@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    "next-env.d.ts",
+    "features/flash-cards/**/*.ts",
+    "features/flash-cards/**/*.tsx",
+    "app/teacher/protected-areas/**/*.tsx",
+    "components/layout/teacher-sidebar.tsx",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts"
+  ]
+}
