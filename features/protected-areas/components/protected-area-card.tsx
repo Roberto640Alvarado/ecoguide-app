@@ -1,14 +1,13 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { es, enUS } from "date-fns/locale";
-import { BookOpen, MapPin, MapPinned, SquarePen } from "lucide-react";
-import { Button } from "@heroui/react";
+import { MapPin, MapPinned } from "lucide-react";
 import { useLanguageStore } from "@/store/language-store";
 import { stripHtmlToText } from "@/lib/utils/rich-text";
 import { ProtectedAreaStatusBadge } from "./protected-area-status-badge";
+import { ProtectedAreaActionsMenu } from "./protected-area-actions-menu";
 import { UnpublishAreaButton } from "./unpublish-area-button";
 import { PublishAreaButton } from "./publish-area-button";
 import type { ProtectedArea } from "../types/protected-area.types";
@@ -71,22 +70,12 @@ export function ProtectedAreaCard({ area }: ProtectedAreaCardProps) {
           </span>
         </div>
 
-        {/* Acciones con ícono + texto visible, pensadas para que cada botón
-            se entienda de un vistazo (editar / flashcards / publicar-
-            despublicar) en vez de depender solo de un ícono. */}
+        {/* Solo dos acciones visibles: el estado (publicar/despublicar, la
+            más relevante de un vistazo) y un menú "Gestionar" que agrupa
+            FlashCards/Speaking/Chatbot/Test/Editar — antes eran hasta 6
+            botones sueltos amontonados en esta fila. */}
         <div className="mt-auto flex flex-wrap items-center gap-2 pt-2">
-          <Link href={`/teacher/protected-areas/${area.id}/flash-cards`}>
-            <Button variant="outline" size="sm">
-              <BookOpen className="h-4 w-4" aria-hidden="true" />
-              FlashCards
-            </Button>
-          </Link>
-          <Link href={`/teacher/protected-areas/${area.id}/edit`}>
-            <Button variant="outline" size="sm">
-              <SquarePen className="h-4 w-4" aria-hidden="true" />
-              {language === "en" ? "Edit" : "Editar"}
-            </Button>
-          </Link>
+          <ProtectedAreaActionsMenu areaId={area.id} />
           <PublishAreaButton area={area} />
           <UnpublishAreaButton area={area} />
         </div>

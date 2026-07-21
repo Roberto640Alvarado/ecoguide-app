@@ -39,6 +39,7 @@ export function TeacherSidebar({ children }: TeacherSidebarProps) {
       navItems={navItems}
       roleLabel={language === "en" ? "Teacher" : "Docente"}
       dashboardHref="/teacher/dashboard"
+      profileHref="/teacher/profile"
     >
       {children}
     </DashboardShell>

@@ -7,6 +7,7 @@ import { Button, Spinner } from "@heroui/react";
 import { Cpu } from "lucide-react";
 import { FormModal } from "@/components/ui/form-modal";
 import { SecretField } from "@/components/ui/secret-field";
+import { SelectField } from "@/components/ui/select-field";
 import { TextField } from "@/components/ui/text-field";
 import { ToggleField } from "@/components/ui/toggle-field";
 import { useLanguageStore } from "@/store/language-store";
@@ -15,7 +16,11 @@ import {
   updateAIProviderSchema,
   type UpdateAIProviderFormValues,
 } from "../schemas/update-ai-provider.schema";
-import type { AIProvider } from "../types/ai-provider.types";
+import {
+  AI_PROVIDER_TYPES,
+  AI_PROVIDER_TYPE_LABELS,
+  type AIProvider,
+} from "../types/ai-provider.types";
 
 interface EditProviderModalProps {
   provider: AIProvider;
@@ -34,6 +39,7 @@ export function EditProviderModal({ provider, trigger }: EditProviderModalProps)
     resolver: zodResolver(updateAIProviderSchema),
     defaultValues: {
       providerName: provider.providerName,
+      providerType: provider.providerType,
       apiKey: "",
       isActive: provider.isActive,
     },
@@ -48,6 +54,7 @@ export function EditProviderModal({ provider, trigger }: EditProviderModalProps)
         const onSubmit = (values: UpdateAIProviderFormValues) => {
           const payload = {
             providerName: values.providerName,
+            providerType: values.providerType,
             isActive: values.isActive,
             ...(values.apiKey ? { apiKey: values.apiKey } : {}),
           };
@@ -72,6 +79,29 @@ export function EditProviderModal({ provider, trigger }: EditProviderModalProps)
                   icon={Cpu}
                   error={errors.providerName?.message}
                 />
+              )}
+            />
+
+            <Controller
+              control={control}
+              name="providerType"
+              render={({ field }) => (
+                <SelectField
+                  {...field}
+                  label={language === "en" ? "Vendor" : "Proveedor real"}
+                  error={errors.providerType?.message}
+                  description={
+                    language === "en"
+                      ? "The real API this provider calls. Determines which integration is used internally."
+                      : "La API real a la que llama este proveedor. Determina qué integración se usa internamente."
+                  }
+                >
+                  {AI_PROVIDER_TYPES.map((type) => (
+                    <option key={type} value={type}>
+                      {AI_PROVIDER_TYPE_LABELS[type]}
+                    </option>
+                  ))}
+                </SelectField>
               )}
             />
 

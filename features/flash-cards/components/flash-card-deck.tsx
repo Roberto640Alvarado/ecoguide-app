@@ -4,9 +4,9 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import useEmblaCarousel from "embla-carousel-react";
 import { BookX, ChevronLeft, ChevronRight } from "lucide-react";
 import { useLanguageStore } from "@/store/language-store";
+import { StepProgress } from "@/components/ui/step-progress";
 import { FlashCardAvatar } from "./flash-card-avatar";
 import { FlashCardFinishDialog } from "./flash-card-finish-dialog";
-import { FlashCardStepper } from "./flash-card-stepper";
 import { FlashCardStudentCard } from "./flash-card-student-card";
 import {
   FLASH_CARD_TYPE_LABELS,
@@ -25,7 +25,7 @@ interface FlashCardDeckProps {
  * Mazo de flashcards del estudiante: un carrusel Embla (swipe nativo, igual
  * patrón que ProtectedAreaImageCarousel) con una tarjeta a la vez, chips
  * para saltar directo a una categoría y un stepper de avance (ver
- * FlashCardStepper). Las flashcards ya llegan ordenadas por categoría
+ * StepProgress). Las flashcards ya llegan ordenadas por categoría
  * (`order` autoasignado en el backend), así que el mazo cuenta una
  * historia: bienvenida → gastronomía → flora y fauna → quiz ambiental →
  * dato curioso → vocabulario. En la última tarjeta, "Siguiente" se
@@ -44,6 +44,7 @@ export function FlashCardDeck({ cards, tourHref }: FlashCardDeckProps) {
 
   useEffect(() => {
     if (!emblaApi) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     onSelect();
     emblaApi.on("select", onSelect);
     emblaApi.on("reInit", onSelect);
@@ -109,7 +110,7 @@ export function FlashCardDeck({ cards, tourHref }: FlashCardDeckProps) {
         })}
       </div>
 
-      <FlashCardStepper
+      <StepProgress
         total={cards.length}
         currentIndex={selectedIndex}
         onStepClick={(index) => emblaApi?.scrollTo(index)}

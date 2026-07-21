@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { Check } from "lucide-react";
 
-interface FlashCardStepperProps {
+interface StepProgressProps {
   total: number;
   currentIndex: number;
   onStepClick: (index: number) => void;
@@ -12,20 +12,19 @@ interface FlashCardStepperProps {
 
 /**
  * Línea de tiempo tipo "stepper" (inspirada en el patrón hs-stepper de
- * Preline, reimplementada en React puro) que muestra el avance del
- * estudiante tarjeta por tarjeta: círculos numerados unidos por una línea,
- * con estado completado (check verde), activo (relleno con el color de
- * acento) o pendiente (contorno neutro). No usamos el plugin real de
- * Preline aquí: el índice actual ya vive en el estado de Embla
- * (selectedIndex en FlashCardDeck), y montar `data-hs-stepper` encima
- * crearía dos fuentes de verdad compitiendo por el mismo avance.
+ * Preline, reimplementada en React puro): círculos numerados unidos por una
+ * línea, con estado completado (check verde), activo (relleno con el color
+ * de acento) o pendiente (contorno neutro). Genérico — el índice actual vive
+ * en el estado del componente que lo usa (embla en FlashCardDeck, un índice
+ * de pregunta en TestTaker). Promovido desde FlashCards (ver CLAUDE.md: "si
+ * dos features necesitan compartir algo, ese algo sube a components/").
  */
-export function FlashCardStepper({
+export function StepProgress({
   total,
   currentIndex,
   onStepClick,
   labelText,
-}: FlashCardStepperProps) {
+}: StepProgressProps) {
   const activeStepRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {

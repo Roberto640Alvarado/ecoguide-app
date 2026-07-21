@@ -46,6 +46,7 @@ export default function StudentAreaTourPage() {
     },
     {
       icon: MessagesSquare,
+      href: `/student/protected-areas/${params.id}/speaking-practice`,
       en: {
         title: "Speaking practice",
         description: "Record yourself and get AI feedback on your pronunciation.",
@@ -57,6 +58,7 @@ export default function StudentAreaTourPage() {
     },
     {
       icon: Bot,
+      href: `/student/protected-areas/${params.id}/chatbot`,
       en: {
         title: "Chatbot",
         description: "Hold a real conversation as a tour guide for this area.",
@@ -68,6 +70,7 @@ export default function StudentAreaTourPage() {
     },
     {
       icon: ClipboardCheck,
+      href: `/student/protected-areas/${params.id}/test`,
       en: {
         title: "Test",
         description: "Answer a short quiz to check what you've learned.",

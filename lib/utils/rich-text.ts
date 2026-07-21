@@ -68,6 +68,19 @@ export function isBlankRichText(html: string): boolean {
   return stripHtmlToText(html).length === 0;
 }
 
+/**
+ * Convierte texto plano (párrafos separados por línea en blanco) al HTML
+ * mínimo que produce RichTextEditor, para poder precargar un ejemplo (ej.
+ * "usar este ejemplo" en los prompts de Speaking Practice/Chatbot) sin que
+ * el editor lo trate como una sola línea sin formato.
+ */
+export function plainTextToRichText(plainText: string): string {
+  return plainText
+    .split("\n\n")
+    .map((paragraph) => `<p>${paragraph.trim().replace(/\n/g, "<br/>")}</p>`)
+    .join("");
+}
+
 /** Clases Tailwind (selectores de hijos) para que las etiquetas que el
  * editor puede producir (listas, enlaces, citas, código) se vean
  * consistentes con el resto de la UI, sin depender de @tailwindcss/typography. */

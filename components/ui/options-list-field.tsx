@@ -3,25 +3,30 @@
 import { Plus, Trash2 } from "lucide-react";
 import { useLanguageStore } from "@/store/language-store";
 
-const MAX_OPTIONS = 6;
+const DEFAULT_MAX_OPTIONS = 6;
 
-interface FlashCardOptionsFieldProps {
+interface OptionsListFieldProps {
   options: string[];
   onChange: (options: string[]) => void;
   error?: string;
+  label?: string;
+  maxOptions?: number;
 }
 
 /**
- * Editor de las opciones de respuesta para flashcards ENVIRONMENTAL. Sigue
- * el mismo patrón que ImageUploader (arreglo controlado vía onChange, sin
- * useFieldArray) porque `options` es un array de strings planos, no de
- * objetos — useFieldArray de react-hook-form requiere lo segundo.
+ * Editor genérico de una lista de opciones de texto (arreglo controlado vía
+ * onChange, sin useFieldArray porque son strings planos, no objetos).
+ * Compartido entre FlashCards (quiz ENVIRONMENTAL) y Tests (preguntas de
+ * opción múltiple) — ver CLAUDE.md: "si dos features necesitan compartir
+ * algo, ese algo sube a components/".
  */
-export function FlashCardOptionsField({
+export function OptionsListField({
   options,
   onChange,
   error,
-}: FlashCardOptionsFieldProps) {
+  label,
+  maxOptions = DEFAULT_MAX_OPTIONS,
+}: OptionsListFieldProps) {
   const language = useLanguageStore((state) => state.language);
 
   function handleOptionChange(index: number, value: string) {
@@ -41,7 +46,7 @@ export function FlashCardOptionsField({
   return (
     <div className="flex flex-col gap-2">
       <label className="text-sm font-medium text-foreground">
-        {language === "en" ? "Answer options" : "Opciones de respuesta"}
+        {label ?? (language === "en" ? "Answer options" : "Opciones de respuesta")}
       </label>
 
       <div className="flex flex-col gap-2">
@@ -69,7 +74,7 @@ export function FlashCardOptionsField({
         ))}
       </div>
 
-      {options.length < MAX_OPTIONS && (
+      {options.length < maxOptions && (
         <button
           type="button"
           onClick={handleAdd}

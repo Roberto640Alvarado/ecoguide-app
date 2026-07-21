@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const { transformFileSync } = require("@swc/core");
 const files = process.argv.slice(2);
 let hadError = false;

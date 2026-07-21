@@ -7,6 +7,7 @@ import { Button, Spinner } from "@heroui/react";
 import { Cpu } from "lucide-react";
 import { FormModal } from "@/components/ui/form-modal";
 import { SecretField } from "@/components/ui/secret-field";
+import { SelectField } from "@/components/ui/select-field";
 import { TextField } from "@/components/ui/text-field";
 import { ToggleField } from "@/components/ui/toggle-field";
 import { useLanguageStore } from "@/store/language-store";
@@ -15,6 +16,10 @@ import {
   createAIProviderSchema,
   type CreateAIProviderFormValues,
 } from "../schemas/create-ai-provider.schema";
+import {
+  AI_PROVIDER_TYPES,
+  AI_PROVIDER_TYPE_LABELS,
+} from "../types/ai-provider.types";
 
 interface CreateProviderModalProps {
   trigger: ReactNode;
@@ -31,7 +36,12 @@ export function CreateProviderModal({ trigger }: CreateProviderModalProps) {
     formState: { errors },
   } = useForm<CreateAIProviderFormValues>({
     resolver: zodResolver(createAIProviderSchema),
-    defaultValues: { providerName: "", apiKey: "", isActive: true },
+    defaultValues: {
+      providerName: "",
+      providerType: "GEMINI",
+      apiKey: "",
+      isActive: true,
+    },
   });
 
   return (
@@ -73,6 +83,29 @@ export function CreateProviderModal({ trigger }: CreateProviderModalProps) {
                   placeholder="Google Gemini"
                   error={errors.providerName?.message}
                 />
+              )}
+            />
+
+            <Controller
+              control={control}
+              name="providerType"
+              render={({ field }) => (
+                <SelectField
+                  {...field}
+                  label={language === "en" ? "Vendor" : "Proveedor real"}
+                  error={errors.providerType?.message}
+                  description={
+                    language === "en"
+                      ? "The real API this provider calls. Determines which integration is used internally."
+                      : "La API real a la que llama este proveedor. Determina qué integración se usa internamente."
+                  }
+                >
+                  {AI_PROVIDER_TYPES.map((type) => (
+                    <option key={type} value={type}>
+                      {AI_PROVIDER_TYPE_LABELS[type]}
+                    </option>
+                  ))}
+                </SelectField>
               )}
             />
 

@@ -30,6 +30,7 @@ interface DashboardShellProps {
   navItems: DashboardNavItem[];
   roleLabel: string;
   dashboardHref: string;
+  profileHref: string;
   children: React.ReactNode;
 }
 
@@ -89,6 +90,7 @@ export function DashboardShell({
   navItems,
   roleLabel,
   dashboardHref,
+  profileHref,
   children,
 }: DashboardShellProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -227,7 +229,17 @@ export function DashboardShell({
           {/* Footer: usuario, idioma, logout */}
           <div className="p-2">
             <div className="flex flex-col gap-2 rounded-lg border border-layer-line bg-layer p-2">
-              <div className="flex items-center gap-3 px-1">
+              <Link
+                href={profileHref}
+                title={
+                  isCollapsed
+                    ? language === "en"
+                      ? "My profile"
+                      : "Mi perfil"
+                    : undefined
+                }
+                className="flex items-center gap-3 rounded-lg px-1 py-1 transition-colors hover:bg-layer-hover"
+              >
                 <UserAvatar
                   name={user?.name}
                   avatarUrl={user?.avatarUrl}
@@ -241,7 +253,7 @@ export function DashboardShell({
                     {roleLabel}
                   </p>
                 </div>
-              </div>
+              </Link>
 
               <div className={`flex items-center gap-2 ${isCollapsed ? "lg:flex-col" : ""}`}>
                 <Button

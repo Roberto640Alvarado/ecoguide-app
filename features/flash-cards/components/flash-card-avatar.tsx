@@ -23,6 +23,7 @@ export function FlashCardAvatar({ type, className }: FlashCardAvatarProps) {
   // selector), hay que reintentar con la nueva imagen en vez de seguir
   // ocultando el componente por el error de la anterior.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setHasError(false);
   }, [src]);
 

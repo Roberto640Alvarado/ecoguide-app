@@ -4,12 +4,12 @@ import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AnimatePresence, motion } from "framer-motion";
 import { Button, Spinner, toast } from "@heroui/react";
+import { OptionsListField } from "@/components/ui/options-list-field";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { TextField } from "@/components/ui/text-field";
 import { useLanguageStore } from "@/store/language-store";
 import { FlashCardAvatar } from "./flash-card-avatar";
 import { FlashCardImageUploader } from "./flash-card-image-uploader";
-import { FlashCardOptionsField } from "./flash-card-options-field";
 import {
   flashCardSchema,
   type FlashCardFormValues,
@@ -267,7 +267,7 @@ export function FlashCardForm({
             control={control}
             name="options"
             render={({ field }) => (
-              <FlashCardOptionsField
+              <OptionsListField
                 options={field.value ?? []}
                 onChange={field.onChange}
                 error={errors.options?.message}

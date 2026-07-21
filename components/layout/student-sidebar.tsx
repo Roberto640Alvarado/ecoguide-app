@@ -32,6 +32,7 @@ export function StudentSidebar({ children }: StudentSidebarProps) {
       navItems={navItems}
       roleLabel={language === "en" ? "Student" : "Estudiante"}
       dashboardHref="/student/dashboard"
+      profileHref="/student/profile"
     >
       {children}
     </DashboardShell>

@@ -1,7 +1,8 @@
-import { apiGet, apiPost } from "@/lib/api/client";
+import { apiGet, apiPatch, apiPost } from "@/lib/api/client";
 import type { AuthResponse, AuthUser } from "../types/auth.types";
 import type { LoginFormValues } from "../schemas/login.schema";
 import type { ForgotPasswordFormValues } from "../schemas/forgot-password.schema";
+import type { UpdateProfileFormValues } from "../schemas/update-profile.schema";
 
 export interface RegisterPayload {
   name: string;
@@ -26,6 +27,10 @@ export function registerRequest(payload: RegisterPayload) {
 
 export function meRequest() {
   return apiGet<AuthUser>("/auth/me");
+}
+
+export function updateProfileRequest(payload: UpdateProfileFormValues) {
+  return apiPatch<AuthUser>("/auth/me", payload);
 }
 
 export function forgotPasswordRequest(payload: ForgotPasswordFormValues) {
