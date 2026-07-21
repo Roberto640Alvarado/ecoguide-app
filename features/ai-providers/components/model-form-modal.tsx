@@ -3,9 +3,10 @@
 import type { ReactNode } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button, FieldError, Input, Label, Spinner, TextField } from "@heroui/react";
+import { Button, Spinner } from "@heroui/react";
 import { Sparkles } from "lucide-react";
 import { FormModal } from "@/components/ui/form-modal";
+import { TextField } from "@/components/ui/text-field";
 import { ToggleField } from "@/components/ui/toggle-field";
 import { useLanguageStore } from "@/store/language-store";
 import { useAddModel } from "../hooks/use-add-model";
@@ -86,29 +87,12 @@ export function ModelFormModal({
               name="name"
               render={({ field }) => (
                 <TextField
-                  isInvalid={!!errors.name}
-                  fullWidth
-                  className="flex flex-col gap-1.5"
-                >
-                  <Label className="text-sm font-medium text-foreground">
-                    {language === "en" ? "Display name" : "Nombre visible"}
-                  </Label>
-                  <div className="relative">
-                    <Sparkles
-                      className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted"
-                      aria-hidden="true"
-                    />
-                    <Input
-                      {...field}
-                      fullWidth
-                      className="pl-9"
-                      placeholder="Gemini 1.5 Flash"
-                    />
-                  </div>
-                  <FieldError className="text-xs">
-                    {errors.name?.message}
-                  </FieldError>
-                </TextField>
+                  {...field}
+                  label={language === "en" ? "Display name" : "Nombre visible"}
+                  icon={Sparkles}
+                  placeholder="Gemini 1.5 Flash"
+                  error={errors.name?.message}
+                />
               )}
             />
 
@@ -117,24 +101,15 @@ export function ModelFormModal({
               name="model"
               render={({ field }) => (
                 <TextField
-                  isInvalid={!!errors.model}
-                  fullWidth
-                  className="flex flex-col gap-1.5"
-                >
-                  <Label className="text-sm font-medium text-foreground">
-                    {language === "en"
+                  {...field}
+                  label={
+                    language === "en"
                       ? "Model identifier"
-                      : "Identificador del modelo"}
-                  </Label>
-                  <Input
-                    {...field}
-                    fullWidth
-                    placeholder="gemini-1.5-flash"
-                  />
-                  <FieldError className="text-xs">
-                    {errors.model?.message}
-                  </FieldError>
-                </TextField>
+                      : "Identificador del modelo"
+                  }
+                  placeholder="gemini-1.5-flash"
+                  error={errors.model?.message}
+                />
               )}
             />
 

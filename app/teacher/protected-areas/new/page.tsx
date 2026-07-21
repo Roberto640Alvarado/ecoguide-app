@@ -45,7 +45,7 @@ export default function NewProtectedAreaPage() {
         </div>
       </div>
 
-      <div className="max-w-2xl rounded-3xl border border-border bg-surface p-6">
+      <div className="w-full rounded-3xl border border-border bg-surface p-6">
         <ProtectedAreaForm
           isSubmitting={createArea.isPending}
           submitLabel={language === "en" ? "Create area" : "Crear área"}

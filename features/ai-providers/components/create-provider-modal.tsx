@@ -3,10 +3,11 @@
 import type { ReactNode } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button, FieldError, Input, Label, Spinner, TextField } from "@heroui/react";
+import { Button, Spinner } from "@heroui/react";
 import { Cpu } from "lucide-react";
 import { FormModal } from "@/components/ui/form-modal";
 import { SecretField } from "@/components/ui/secret-field";
+import { TextField } from "@/components/ui/text-field";
 import { ToggleField } from "@/components/ui/toggle-field";
 import { useLanguageStore } from "@/store/language-store";
 import { useCreateAIProvider } from "../hooks/use-create-ai-provider";
@@ -64,29 +65,14 @@ export function CreateProviderModal({ trigger }: CreateProviderModalProps) {
               name="providerName"
               render={({ field }) => (
                 <TextField
-                  isInvalid={!!errors.providerName}
-                  fullWidth
-                  className="flex flex-col gap-1.5"
-                >
-                  <Label className="text-sm font-medium text-foreground">
-                    {language === "en" ? "Provider name" : "Nombre del proveedor"}
-                  </Label>
-                  <div className="relative">
-                    <Cpu
-                      className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted"
-                      aria-hidden="true"
-                    />
-                    <Input
-                      {...field}
-                      fullWidth
-                      className="pl-9"
-                      placeholder="Google Gemini"
-                    />
-                  </div>
-                  <FieldError className="text-xs">
-                    {errors.providerName?.message}
-                  </FieldError>
-                </TextField>
+                  {...field}
+                  label={
+                    language === "en" ? "Provider name" : "Nombre del proveedor"
+                  }
+                  icon={Cpu}
+                  placeholder="Google Gemini"
+                  error={errors.providerName?.message}
+                />
               )}
             />
 

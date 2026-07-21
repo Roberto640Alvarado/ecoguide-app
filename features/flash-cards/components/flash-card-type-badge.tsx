@@ -16,7 +16,7 @@ export function FlashCardTypeBadge({ type }: FlashCardTypeBadgeProps) {
 
   return (
     <span
-      className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${FLASH_CARD_TYPE_TONE[type].badge}`}
+      className={`inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-medium ${FLASH_CARD_TYPE_TONE[type].badge}`}
     >
       {FLASH_CARD_TYPE_LABELS[type][language]}
     </span>

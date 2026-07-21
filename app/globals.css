@@ -2,6 +2,12 @@
 @import "@heroui/styles";
 @import "leaflet/dist/leaflet.css";
 
+/* Preline UI (solo el núcleo de hs-overlay, usado por el sidebar)
+   Se importa por ruta relativa: el "exports" del paquete preline@4.2.0 no
+   expone "./variants.css" como subpath válido para @import. */
+@import "../node_modules/preline/variants.css";
+@source "../node_modules/preline/dist/*.js";
+
 :root,
 [data-theme="light"] {
   /* Acento eco-verde para EcoGuide Training */
@@ -19,6 +25,52 @@
   --accent: oklch(0.68 0.14 152);
   --accent-foreground: oklch(0.15 0 0);
   --field-border: var(--border);
+}
+
+/*
+ * Alias de tokens para el sidebar (basado en el bloque Preline "Content Push
+ * to Mini Sidebar"). Reutilizan las variables de color de HeroUI en lugar de
+ * definir una paleta nueva, para mantener consistencia visual y soporte
+ * automático de light/dark.
+ */
+@theme inline {
+  --color-sidebar: var(--surface);
+  --color-sidebar-line: var(--border);
+  --color-sidebar-nav-foreground: var(--foreground);
+  --color-sidebar-nav-hover: var(--surface-hover);
+  --color-sidebar-nav-focus: var(--surface-hover);
+  --color-sidebar-nav-active: var(--accent-soft);
+
+  --color-layer: var(--surface);
+  --color-layer-foreground: var(--foreground);
+  --color-layer-line: var(--border);
+  --color-layer-hover: var(--surface-hover);
+  --color-layer-focus: var(--surface-hover);
+
+  --color-secondary: var(--surface-secondary);
+  --color-secondary-foreground: var(--surface-secondary-foreground);
+  --color-secondary-line: var(--border);
+  --color-secondary-hover: var(--surface-hover);
+  --color-secondary-focus: var(--surface-hover);
+
+  --color-muted-foreground-2: var(--muted);
+  --color-muted-hover: var(--surface-hover);
+  --color-muted-focus: var(--surface-hover);
+
+  --color-surface-1: var(--surface-secondary);
+
+  --color-scrollbar-track: transparent;
+  --color-scrollbar-thumb: var(--border);
+
+  /* Usados por el carrusel Preline (hs-carousel) */
+  --color-line-2: var(--border);
+  --color-primary: var(--accent);
+  --color-primary-foreground: var(--accent-foreground);
+
+  /* Usados por los campos de formulario estilo Preline (input, textarea,
+     strong-password, pin-input, copy-markup) */
+  --color-muted-foreground-1: var(--muted);
+  --color-primary-focus: var(--accent);
 }
 
 html {
@@ -49,4 +101,21 @@ html {
 
 body {
   font-family: var(--font-open-sans), Arial, Helvetica, sans-serif;
+}
+
+/*
+ * RichTextEditor (Tiptap): placeholder del párrafo vacío y remoción del
+ * outline nativo del contentEditable (el borde de foco ya lo da el
+ * contenedor bg-layer/border-layer-line que envuelve al editor).
+ */
+.tiptap p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+  color: var(--muted);
+}
+
+.tiptap:focus {
+  outline: none;
 }

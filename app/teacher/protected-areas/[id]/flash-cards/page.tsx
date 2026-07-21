@@ -9,6 +9,7 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@heroui/react";
 import { ArrowLeft, BookOpen, ImageOff, Search, SquarePen } from "lucide-react";
 import { useLanguageStore } from "@/store/language-store";
+import { stripHtmlToText } from "@/lib/utils/rich-text";
 import { DataTable } from "@/components/ui/data-table";
 import { PaginationControls } from "@/components/ui/pagination-controls";
 import { useProtectedArea } from "@/features/protected-areas/hooks/use-protected-area";
@@ -88,11 +89,13 @@ export default function TeacherFlashCardsPage() {
               </div>
             )}
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 max-w-xs sm:max-w-sm lg:max-w-md">
             <p className="truncate font-medium text-foreground">
               {row.original.title}
             </p>
-            <p className="truncate text-xs text-muted">{row.original.content}</p>
+            <p className="truncate text-xs text-muted">
+              {stripHtmlToText(row.original.content)}
+            </p>
           </div>
         </div>
       ),

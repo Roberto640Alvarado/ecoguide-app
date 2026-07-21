@@ -1,8 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import useEmblaCarousel from "embla-carousel-react";
-import { AnimatePresence, motion } from "framer-motion";
+import { useEffect, useId } from "react";
 import { ChevronLeft, ChevronRight, MapPinned } from "lucide-react";
 
 interface ProtectedAreaImageCarouselProps {
@@ -12,32 +10,27 @@ interface ProtectedAreaImageCarouselProps {
 
 /**
  * Carrusel de imágenes del área (portada + galería) para la vista de
- * detalle del estudiante. Usa Embla para el desplazamiento físico
- * (swipe/drag nativo) y Framer Motion solo para la entrada/salida de los
- * controles y el efecto de "pop" en los indicadores activos.
+ * detalle del estudiante. Usa el plugin hs-carousel de Preline UI (mismo
+ * patrón adoptado para el sidebar) en vez de Embla: swipe/drag nativo,
+ * flechas y miniaturas resueltos por la librería, sin duplicar lógica de
+ * carrusel en el proyecto.
  */
 export function ProtectedAreaImageCarousel({
   images,
   alt,
 }: ProtectedAreaImageCarouselProps) {
-  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: images.length > 1 });
-  const [selectedIndex, setSelectedIndex] = useState(0);
+  const carouselId = `pa-carousel-${useId()}`;
 
-  const onSelect = useCallback(() => {
-    if (!emblaApi) return;
-    setSelectedIndex(emblaApi.selectedScrollSnap());
-  }, [emblaApi]);
-
+  // El loader global (PrelineScript) solo reescanea el DOM al cambiar de
+  // ruta. Este carrusel puede montarse después (ej. al resolver React Query
+  // la petición del área protegida), así que se reinicializa aquí cuando
+  // cambia la lista de imágenes.
   useEffect(() => {
-    if (!emblaApi) return;
-    onSelect();
-    emblaApi.on("select", onSelect);
-    emblaApi.on("reInit", onSelect);
-    return () => {
-      emblaApi.off("select", onSelect);
-      emblaApi.off("reInit", onSelect);
-    };
-  }, [emblaApi, onSelect]);
+    if (images.length === 0) return;
+    import("preline").then(() => {
+      window.HSStaticMethods.autoInit(["carousel"]);
+    });
+  }, [images]);
 
   if (images.length === 0) {
     return (
@@ -51,70 +44,73 @@ export function ProtectedAreaImageCarousel({
   }
 
   return (
-    <div className="group relative h-56 w-full overflow-hidden sm:h-72">
-      <div ref={emblaRef} className="h-full w-full overflow-hidden">
-        <div className="flex h-full">
-          {images.map((url, index) => (
-            <div key={url} className="relative h-full min-w-0 flex-[0_0_100%]">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={url}
-                alt={`${alt} ${index + 1}`}
-                className="h-full w-full object-cover"
-              />
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {images.length > 1 && (
-        <>
-          {/*
-            Visibles siempre en móvil (sin hover disponible; el swipe de
-            Embla ya funciona, pero los botones ayudan a que se note que se
-            puede navegar) y solo al pasar el cursor en pantallas grandes.
-          */}
-          <button
-            type="button"
-            onClick={() => emblaApi?.scrollPrev()}
-            aria-label="Previous image"
-            className="absolute left-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100"
-          >
-            <ChevronLeft className="h-5 w-5" aria-hidden="true" />
-          </button>
-          <button
-            type="button"
-            onClick={() => emblaApi?.scrollNext()}
-            aria-label="Next image"
-            className="absolute right-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100"
-          >
-            <ChevronRight className="h-5 w-5" aria-hidden="true" />
-          </button>
-
-          <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 items-center gap-1.5">
-            <AnimatePresence initial={false}>
-              {images.map((url, index) => (
-                <motion.button
-                  key={url}
-                  type="button"
-                  onClick={() => emblaApi?.scrollTo(index)}
-                  aria-label={`Go to image ${index + 1}`}
-                  initial={{ scale: 0.6, opacity: 0 }}
-                  animate={{
-                    scale: index === selectedIndex ? 1.15 : 1,
-                    opacity: 1,
-                    width: index === selectedIndex ? 18 : 6,
-                  }}
-                  transition={{ duration: 0.25 }}
-                  className={`h-1.5 rounded-full ${
-                    index === selectedIndex ? "bg-white" : "bg-white/50"
-                  }`}
+    <div
+      id={carouselId}
+      data-hs-carousel='{"loadingClasses": "opacity-0"}'
+      className="relative"
+    >
+      <div className="hs-carousel flex flex-col sm:flex-row gap-2">
+        {/* Slide principal */}
+        <div className="sm:order-2 relative grow overflow-hidden h-56 sm:h-72 rounded-lg">
+          <div className="hs-carousel-body absolute top-0 bottom-0 inset-s-0 flex flex-nowrap transition-transform duration-700 opacity-0">
+            {images.map((url, index) => (
+              <div key={url} className="hs-carousel-slide h-full">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={url}
+                  alt={`${alt} ${index + 1}`}
+                  className="h-full w-full object-cover"
                 />
-              ))}
-            </AnimatePresence>
+              </div>
+            ))}
           </div>
-        </>
-      )}
+
+          {images.length > 1 && (
+            <>
+              {/* Arrows */}
+              <button
+                type="button"
+                aria-label={`Previous image of ${alt}`}
+                className="hs-carousel-prev hs-carousel-disabled:opacity-50 hs-carousel-disabled:cursor-default absolute top-1/2 inset-s-2 inline-flex justify-center items-center size-10 bg-layer text-layer-foreground rounded-full shadow-2xs hover:bg-layer-hover -translate-y-1/2 focus:outline-hidden"
+              >
+                <ChevronLeft className="size-5 shrink-0" aria-hidden="true" />
+                <span className="sr-only">Previous</span>
+              </button>
+              <button
+                type="button"
+                aria-label={`Next image of ${alt}`}
+                className="hs-carousel-next hs-carousel-disabled:opacity-50 hs-carousel-disabled:cursor-default absolute top-1/2 inset-e-2 inline-flex justify-center items-center size-10 bg-layer text-layer-foreground rounded-full shadow-2xs hover:bg-layer-hover -translate-y-1/2 focus:outline-hidden"
+              >
+                <span className="sr-only">Next</span>
+                <ChevronRight className="size-5 shrink-0" aria-hidden="true" />
+              </button>
+              {/* End Arrows */}
+            </>
+          )}
+        </div>
+
+        {/* Thumbnails */}
+        {images.length > 1 && (
+          <div className="sm:order-1 flex-none">
+            <div className="hs-carousel-pagination max-h-72 flex flex-row sm:flex-col gap-2 overflow-x-auto sm:overflow-x-hidden sm:overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-thumb]:rounded-none [&::-webkit-scrollbar-track]:bg-scrollbar-track [&::-webkit-scrollbar-thumb]:bg-scrollbar-thumb">
+              {images.map((url, index) => (
+                <div
+                  key={url}
+                  className="hs-carousel-pagination-item shrink-0 border border-line-2 rounded-md overflow-hidden cursor-pointer size-16 sm:size-20 hs-carousel-active:border-primary"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={url}
+                    alt={`${alt} ${index + 1} miniatura`}
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        {/* End Thumbnails */}
+      </div>
     </div>
   );
 }

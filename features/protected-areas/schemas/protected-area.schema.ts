@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isBlankRichText } from "@/lib/utils/rich-text";
 
 /**
  * Espeja CreateProtectedAreaDto/UpdateProtectedAreaDto. Se usa un único
@@ -13,7 +14,14 @@ import { z } from "zod";
  */
 export const protectedAreaSchema = z.object({
   name: z.string().min(1, "El nombre es requerido."),
-  description: z.string().min(1, "La descripción es requerida."),
+  // RichTextEditor guarda HTML: un editor "vacío" produce "<p></p>", que
+  // .min(1) por sí solo no detectaría como vacío.
+  description: z
+    .string()
+    .min(1, "La descripción es requerida.")
+    .refine((value) => !isBlankRichText(value), {
+      message: "La descripción es requerida.",
+    }),
   latitude: z
     .number()
     .min(-90, "La latitud debe estar entre -90 y 90.")

@@ -3,9 +3,10 @@
 import type { ReactNode } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button, FieldError, Input, Label, Spinner, TextField } from "@heroui/react";
+import { Button, Spinner } from "@heroui/react";
 import { Mail, User as UserIcon } from "lucide-react";
 import { FormModal } from "@/components/ui/form-modal";
+import { TextField } from "@/components/ui/text-field";
 import { ToggleField } from "@/components/ui/toggle-field";
 import { useLanguageStore } from "@/store/language-store";
 import { useUpdateUser } from "../hooks/use-update-user";
@@ -61,29 +62,12 @@ export function EditUserModal({ user, trigger }: EditUserModalProps) {
                 name="name"
                 render={({ field }) => (
                   <TextField
-                    isInvalid={!!errors.name}
-                    fullWidth
-                    className="flex flex-col gap-1.5"
-                  >
-                    <Label className="text-sm font-medium text-foreground">
-                      {language === "en" ? "First name" : "Nombre"}
-                    </Label>
-                    <div className="relative">
-                      <UserIcon
-                        className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted"
-                        aria-hidden="true"
-                      />
-                      <Input
-                        {...field}
-                        fullWidth
-                        className="pl-9"
-                        autoComplete="given-name"
-                      />
-                    </div>
-                    <FieldError className="text-xs">
-                      {errors.name?.message}
-                    </FieldError>
-                  </TextField>
+                    {...field}
+                    label={language === "en" ? "First name" : "Nombre"}
+                    icon={UserIcon}
+                    autoComplete="given-name"
+                    error={errors.name?.message}
+                  />
                 )}
               />
 
@@ -92,29 +76,12 @@ export function EditUserModal({ user, trigger }: EditUserModalProps) {
                 name="lastName"
                 render={({ field }) => (
                   <TextField
-                    isInvalid={!!errors.lastName}
-                    fullWidth
-                    className="flex flex-col gap-1.5"
-                  >
-                    <Label className="text-sm font-medium text-foreground">
-                      {language === "en" ? "Last name" : "Apellido"}
-                    </Label>
-                    <div className="relative">
-                      <UserIcon
-                        className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted"
-                        aria-hidden="true"
-                      />
-                      <Input
-                        {...field}
-                        fullWidth
-                        className="pl-9"
-                        autoComplete="family-name"
-                      />
-                    </div>
-                    <FieldError className="text-xs">
-                      {errors.lastName?.message}
-                    </FieldError>
-                  </TextField>
+                    {...field}
+                    label={language === "en" ? "Last name" : "Apellido"}
+                    icon={UserIcon}
+                    autoComplete="family-name"
+                    error={errors.lastName?.message}
+                  />
                 )}
               />
             </div>
@@ -124,30 +91,13 @@ export function EditUserModal({ user, trigger }: EditUserModalProps) {
               name="email"
               render={({ field }) => (
                 <TextField
-                  isInvalid={!!errors.email}
-                  fullWidth
-                  className="flex flex-col gap-1.5"
-                >
-                  <Label className="text-sm font-medium text-foreground">
-                    {language === "en" ? "Email" : "Correo electrónico"}
-                  </Label>
-                  <div className="relative">
-                    <Mail
-                      className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted"
-                      aria-hidden="true"
-                    />
-                    <Input
-                      {...field}
-                      fullWidth
-                      type="email"
-                      className="pl-9"
-                      autoComplete="email"
-                    />
-                  </div>
-                  <FieldError className="text-xs">
-                    {errors.email?.message}
-                  </FieldError>
-                </TextField>
+                  {...field}
+                  label={language === "en" ? "Email" : "Correo electrónico"}
+                  icon={Mail}
+                  type="email"
+                  autoComplete="email"
+                  error={errors.email?.message}
+                />
               )}
             />
 
@@ -156,10 +106,13 @@ export function EditUserModal({ user, trigger }: EditUserModalProps) {
               name="role"
               render={({ field }) => (
                 <div className="flex flex-col gap-1.5">
-                  <Label className="text-sm font-medium text-foreground">
+                  <label className="text-sm font-medium text-foreground">
                     {language === "en" ? "Role" : "Rol"}
-                  </Label>
-                  <select {...field} className="input">
+                  </label>
+                  <select
+                    {...field}
+                    className="py-2.5 sm:py-3 px-4 block w-full bg-layer border border-layer-line rounded-lg sm:text-sm text-foreground focus:outline-hidden focus:border-primary-focus focus:ring-1 focus:ring-primary-focus disabled:opacity-50 disabled:pointer-events-none"
+                  >
                     <option value="STUDENT">
                       {language === "en" ? "Student" : "Estudiante"}
                     </option>

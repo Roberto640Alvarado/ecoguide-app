@@ -4,12 +4,13 @@ import Link from "next/link";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion, AnimatePresence } from "framer-motion";
-import { Button, FieldError, Input, Label, Spinner, TextField } from "@heroui/react";
+import { Button, Spinner } from "@heroui/react";
 import { LogIn, Mail } from "lucide-react";
 import { useLanguageStore } from "@/store/language-store";
 import { authContent } from "@/lib/i18n/auth-content";
 import { useLogin } from "@/features/auth/hooks/use-login";
 import { PasswordField } from "@/features/auth/components/password-field";
+import { TextField } from "@/components/ui/text-field";
 import {
   loginSchema,
   type LoginFormValues,
@@ -71,31 +72,14 @@ export default function LoginPage() {
           name="email"
           render={({ field }) => (
             <TextField
-              isInvalid={!!errors.email}
-              fullWidth
-              className="flex flex-col gap-1.5"
-            >
-              <Label className="text-sm font-medium text-foreground">
-                {t.email}
-              </Label>
-              <div className="relative">
-                <Mail
-                  className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted"
-                  aria-hidden="true"
-                />
-                <Input
-                  {...field}
-                  fullWidth
-                  type="email"
-                  placeholder={t.emailPlaceholder}
-                  autoComplete="email"
-                  className="pl-9"
-                />
-              </div>
-              <FieldError className="text-xs">
-                {errors.email?.message}
-              </FieldError>
-            </TextField>
+              {...field}
+              label={t.email}
+              icon={Mail}
+              type="email"
+              placeholder={t.emailPlaceholder}
+              autoComplete="email"
+              error={errors.email?.message}
+            />
           )}
         />
 

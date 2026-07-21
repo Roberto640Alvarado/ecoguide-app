@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 import { parseAsString, useQueryState } from "nuqs";
 import { useLanguageStore } from "@/store/language-store";
 import { useProtectedAreas } from "@/features/protected-areas/hooks/use-protected-areas";
+import { stripHtmlToText } from "@/lib/utils/rich-text";
 
 const ProtectedAreasMap = dynamic(
   () =>
@@ -152,7 +153,16 @@ interface AreaCardProps {
   variant: "mobile" | "grid";
 }
 
+// TODO(StudentProgress): el módulo StudentProgress todavía no existe en la
+// API (ver CLAUDE.md, sección "Pendientes en la API"). El progreso y la
+// nota de abajo son datos de ejemplo quemados solo para previsualizar el
+// diseño de la tarjeta; hay que reemplazarlos por el hook real
+// (useStudentProgress(area.id) o similar) en cuanto el endpoint exista.
+const MOCK_PROGRESS_PERCENT = 45;
+const MOCK_GRADE = "8.5";
+
 function AreaCard({ area, index, variant }: AreaCardProps) {
+  const language = useLanguageStore((state) => state.language);
   const coverImage = area.images[0];
 
   return (
@@ -166,9 +176,15 @@ function AreaCard({ area, index, variant }: AreaCardProps) {
     >
       <Link
         href={`/student/protected-areas/${area.id}`}
-        className="flex h-full flex-col overflow-hidden rounded-3xl border border-border bg-surface transition-shadow hover:shadow-md"
+        className="flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-surface transition-shadow hover:shadow-md"
       >
-        <div className="relative h-36 w-full bg-accent-soft">
+        {/* Portada: foto + título/descripción superpuestos (mismo patrón
+            que ProtectedAreaCard, la tarjeta del panel docente). */}
+        <div
+          className={`relative w-full shrink-0 bg-accent-soft ${
+            variant === "mobile" ? "h-36" : "h-48 sm:h-52"
+          }`}
+        >
           {coverImage ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -184,10 +200,32 @@ function AreaCard({ area, index, variant }: AreaCardProps) {
               />
             </div>
           )}
+
+          <div className="absolute inset-x-0 top-0 bg-gradient-to-b from-black/70 via-black/30 to-transparent p-4">
+            <h3 className="line-clamp-1 font-semibold text-white">
+              {area.name}
+            </h3>
+            <p className="mt-1 line-clamp-2 text-sm text-white/85">
+              {stripHtmlToText(area.description)}
+            </p>
+          </div>
         </div>
-        <div className="flex flex-col gap-1 p-5">
-          <h3 className="font-semibold text-foreground">{area.name}</h3>
-          <p className="line-clamp-2 text-sm text-muted">{area.description}</p>
+
+        <div className="flex flex-1 flex-col gap-2 p-5">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-xs font-medium text-muted">
+              {language === "en" ? "Your progress" : "Tu avance"}
+            </span>
+            <span className="rounded-full bg-accent-soft px-2.5 py-0.5 text-xs font-semibold text-accent-soft-foreground">
+              {language === "en" ? "Grade" : "Nota"} {MOCK_GRADE}
+            </span>
+          </div>
+          <div className="h-1.5 w-full overflow-hidden rounded-full bg-default-soft">
+            <div
+              className="h-full rounded-full bg-accent"
+              style={{ width: `${MOCK_PROGRESS_PERCENT}%` }}
+            />
+          </div>
         </div>
       </Link>
     </motion.div>

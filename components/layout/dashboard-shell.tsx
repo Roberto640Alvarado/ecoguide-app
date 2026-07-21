@@ -4,9 +4,16 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
-import { AnimatePresence, motion } from "framer-motion";
 import { Button, Spinner } from "@heroui/react";
-import { Languages, LogOut, Menu, X, type LucideIcon } from "lucide-react";
+import {
+  Languages,
+  LogOut,
+  Menu,
+  X,
+  PanelLeftClose,
+  PanelLeftOpen,
+  type LucideIcon,
+} from "lucide-react";
 import { useAuthStore } from "@/store/auth-store";
 import { useLanguageStore } from "@/store/language-store";
 import { useLogout } from "@/features/auth/hooks/use-logout";
@@ -26,24 +33,36 @@ interface DashboardShellProps {
   children: React.ReactNode;
 }
 
+// Sidebar Preline UI "Content Push to Mini Sidebar" adaptado: un único
+// elemento fijo que en móvil se desliza como overlay (hs-overlay) y en
+// escritorio permanece siempre visible, colapsable a modo icono (React
+// state). El `lg:hidden` condicional en los labels asegura que el modo
+// "mini" solo aplique a partir del breakpoint lg, nunca al drawer móvil.
+const SIDEBAR_ID = "hs-app-sidebar";
+
 function NavLink({
   item,
   isActive,
+  isCollapsed,
   onNavigate,
 }: {
   item: DashboardNavItem;
   isActive: boolean;
+  isCollapsed: boolean;
   onNavigate?: () => void;
 }) {
   const Icon = item.icon;
+  const labelClassName = isCollapsed ? "lg:hidden" : "";
 
   if (item.comingSoon) {
     return (
-      <span className="flex cursor-not-allowed items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted/60">
-        <Icon className="h-4 w-4" aria-hidden="true" />
-        {item.label}
-        <span className="ml-auto rounded-full bg-default-soft px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted">
-          Pronto
+      <span className="min-h-[36px] flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-muted/60 rounded-lg cursor-not-allowed">
+        <Icon className="size-4 shrink-0" aria-hidden="true" />
+        <span className={`text-nowrap flex items-center gap-1.5 ${labelClassName}`}>
+          {item.label}
+          <span className="py-0.5 px-1.5 inline-flex items-center gap-x-1.5 text-xs bg-surface-1 text-surface-foreground rounded-full">
+            Pronto
+          </span>
         </span>
       </span>
     );
@@ -53,98 +72,16 @@ function NavLink({
     <Link
       href={item.href}
       onClick={onNavigate}
-      className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
+      title={isCollapsed ? item.label : undefined}
+      className={`min-h-[36px] flex items-center gap-x-3.5 py-2 px-2.5 text-sm rounded-lg focus:outline-hidden ${
         isActive
-          ? "bg-accent-soft text-accent-soft-foreground"
-          : "text-muted hover:bg-surface-secondary hover:text-foreground"
+          ? "bg-sidebar-nav-active text-sidebar-nav-foreground"
+          : "text-sidebar-nav-foreground hover:bg-sidebar-nav-hover focus:bg-sidebar-nav-focus"
       }`}
     >
-      <Icon className="h-4 w-4" aria-hidden="true" />
-      {item.label}
+      <Icon className="size-4 shrink-0" aria-hidden="true" />
+      <span className={`text-nowrap ${labelClassName}`}>{item.label}</span>
     </Link>
-  );
-}
-
-function SidebarContent({
-  navItems,
-  roleLabel,
-  dashboardHref,
-  onNavigate,
-}: {
-  navItems: DashboardNavItem[];
-  roleLabel: string;
-  dashboardHref: string;
-  onNavigate?: () => void;
-}) {
-  const pathname = usePathname();
-  const user = useAuthStore((state) => state.user);
-  const language = useLanguageStore((state) => state.language);
-  const toggleLanguage = useLanguageStore((state) => state.toggleLanguage);
-  const logout = useLogout();
-
-  return (
-    <div className="flex h-full flex-col gap-6 p-4">
-      <Link
-        href={dashboardHref}
-        onClick={onNavigate}
-        className="flex items-center gap-2 px-2 font-semibold text-foreground"
-      >
-        <Image
-          src="/logo.png"
-          alt="EcoGuide Training"
-          width={32}
-          height={32}
-          className="h-8 w-8 rounded-full"
-        />
-        <span className="text-base tracking-tight">EcoGuide</span>
-      </Link>
-
-      <nav className="flex flex-1 flex-col gap-1">
-        {navItems.map((item) => (
-          <NavLink
-            key={item.href}
-            item={item}
-            isActive={pathname === item.href}
-            onNavigate={onNavigate}
-          />
-        ))}
-      </nav>
-
-      <div className="flex flex-col gap-3 rounded-2xl border border-border bg-surface-secondary p-3">
-        <div className="flex items-center gap-3">
-          <UserAvatar name={user?.name} avatarUrl={user?.avatarUrl} size="md" />
-          <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-foreground">
-              {user ? `${user.name} ${user.lastName}` : "..."}
-            </p>
-            <p className="truncate text-xs text-muted">{roleLabel}</p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="flex-1"
-            onPress={toggleLanguage}
-            aria-label="Toggle language"
-          >
-            <Languages className="h-4 w-4" aria-hidden="true" />
-            {language === "en" ? "ES" : "EN"}
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex-1"
-            onPress={() => logout()}
-            aria-label="Logout"
-          >
-            <LogOut className="h-4 w-4" aria-hidden="true" />
-            {language === "en" ? "Log out" : "Salir"}
-          </Button>
-        </div>
-      </div>
-    </div>
   );
 }
 
@@ -154,8 +91,13 @@ export function DashboardShell({
   dashboardHref,
   children,
 }: DashboardShellProps) {
-  const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const isHydrated = useAuthStore((state) => state.isHydrated);
+  const pathname = usePathname();
+  const user = useAuthStore((state) => state.user);
+  const language = useLanguageStore((state) => state.language);
+  const toggleLanguage = useLanguageStore((state) => state.toggleLanguage);
+  const logout = useLogout();
 
   // Evita que las páginas hijas disparen requests (React Query, etc.) antes
   // de que useSessionHydration termine de rehidratar el accessToken desde la
@@ -172,19 +114,12 @@ export function DashboardShell({
     );
   }
 
+  const labelClassName = isCollapsed ? "lg:hidden" : "";
+
   return (
     <div className="min-h-screen bg-background">
-      {/* Sidebar fijo en desktop */}
-      <aside className="fixed inset-y-0 left-0 hidden w-64 border-r border-border bg-surface lg:block">
-        <SidebarContent
-          navItems={navItems}
-          roleLabel={roleLabel}
-          dashboardHref={dashboardHref}
-        />
-      </aside>
-
-      {/* Topbar móvil */}
-      <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-border bg-background/80 px-4 backdrop-blur-md lg:hidden">
+      {/* Topbar móvil: dispara el overlay del sidebar */}
+      <header className="lg:hidden sticky top-0 z-40 flex h-14 items-center justify-between border-b border-border bg-background/80 px-4 backdrop-blur-md">
         <Link href={dashboardHref} className="flex items-center gap-2">
           <Image
             src="/logo.png"
@@ -195,59 +130,158 @@ export function DashboardShell({
           />
           <span className="font-semibold text-foreground">EcoGuide</span>
         </Link>
-        <Button
-          variant="ghost"
-          size="sm"
-          isIconOnly
-          onPress={() => setIsMobileOpen(true)}
-          aria-label="Abrir menú"
+        <button
+          type="button"
+          className="py-2 px-3 inline-flex justify-center items-center gap-x-2 text-sm font-medium bg-secondary border border-secondary-line text-secondary-foreground rounded-lg shadow-2xs hover:bg-secondary-hover focus:outline-hidden focus:bg-secondary-focus"
+          aria-haspopup="dialog"
+          aria-expanded="false"
+          aria-controls={SIDEBAR_ID}
+          data-hs-overlay={`#${SIDEBAR_ID}`}
         >
-          <Menu className="h-5 w-5" aria-hidden="true" />
-        </Button>
+          <Menu className="size-4" aria-hidden="true" />
+          <span className="sr-only">
+            {language === "en" ? "Open menu" : "Abrir menú"}
+          </span>
+        </button>
       </header>
 
-      {/* Drawer móvil */}
-      <AnimatePresence>
-        {isMobileOpen && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50 bg-backdrop lg:hidden"
-              onClick={() => setIsMobileOpen(false)}
-              aria-hidden="true"
-            />
-            <motion.div
-              initial={{ x: "-100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "-100%" }}
-              transition={{ type: "tween", duration: 0.25 }}
-              className="fixed inset-y-0 left-0 z-50 w-72 bg-surface shadow-xl lg:hidden"
+      {/* Sidebar: overlay en móvil, fijo y colapsable en escritorio */}
+      <div
+        id={SIDEBAR_ID}
+        className={`hs-overlay [--auto-close:lg] lg:block lg:translate-x-0 lg:inset-e-auto lg:bottom-0 hs-overlay-open:translate-x-0 -translate-x-full transition-all duration-300 transform h-full hidden overflow-x-hidden fixed top-0 inset-s-0 bottom-0 z-60 bg-sidebar border-e border-sidebar-line w-64 ${
+          isCollapsed ? "lg:w-16" : "lg:w-64"
+        }`}
+        role="dialog"
+        tabIndex={-1}
+        aria-label="Sidebar"
+      >
+        <div className="relative flex flex-col h-full max-h-full">
+          {/* Header */}
+          <header className="py-4 px-2 flex justify-between items-center gap-x-2">
+            <Link
+              href={dashboardHref}
+              className={`flex-none font-semibold text-xl text-layer-foreground focus:outline-hidden focus:opacity-80 ${labelClassName}`}
             >
-              <div className="flex justify-end p-2">
+              EcoGuide
+            </Link>
+
+            <div className="lg:hidden">
+              {/* Close Button (móvil) */}
+              <button
+                type="button"
+                className="flex justify-center items-center gap-x-3 size-6 bg-layer border border-layer-line text-sm text-muted-foreground-2 hover:bg-layer-hover rounded-full disabled:opacity-50 disabled:pointer-events-none focus:outline-hidden focus:bg-layer-focus"
+                aria-controls={SIDEBAR_ID}
+                data-hs-overlay={`#${SIDEBAR_ID}`}
+              >
+                <X className="size-4 shrink-0" aria-hidden="true" />
+                <span className="sr-only">
+                  {language === "en" ? "Close" : "Cerrar"}
+                </span>
+              </button>
+            </div>
+
+            <div className="hidden lg:block">
+              {/* Toggle Button (colapsar/expandir, solo escritorio) */}
+              <button
+                type="button"
+                onClick={() => setIsCollapsed((collapsed) => !collapsed)}
+                className="flex justify-center items-center flex-none gap-x-3 size-9 text-sm text-muted-foreground-2 hover:bg-muted-hover rounded-full disabled:opacity-50 disabled:pointer-events-none focus:outline-hidden focus:bg-muted-focus"
+                aria-expanded={!isCollapsed}
+                aria-label={
+                  isCollapsed
+                    ? language === "en"
+                      ? "Expand navigation"
+                      : "Expandir navegación"
+                    : language === "en"
+                      ? "Minify navigation"
+                      : "Minimizar navegación"
+                }
+              >
+                {isCollapsed ? (
+                  <PanelLeftOpen className="size-4 shrink-0" aria-hidden="true" />
+                ) : (
+                  <PanelLeftClose className="size-4 shrink-0" aria-hidden="true" />
+                )}
+              </button>
+            </div>
+          </header>
+
+          {/* Body */}
+          <nav className="h-full overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-none [&::-webkit-scrollbar-track]:bg-scrollbar-track [&::-webkit-scrollbar-thumb]:bg-scrollbar-thumb">
+            <div className="pb-0 px-2 w-full flex flex-col flex-wrap">
+              <ul className="space-y-1">
+                {navItems.map((item) => (
+                  <li key={item.href}>
+                    <NavLink
+                      item={item}
+                      isActive={pathname === item.href}
+                      isCollapsed={isCollapsed}
+                    />
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </nav>
+          {/* End Body */}
+
+          {/* Footer: usuario, idioma, logout */}
+          <div className="p-2">
+            <div className="flex flex-col gap-2 rounded-lg border border-layer-line bg-layer p-2">
+              <div className="flex items-center gap-3 px-1">
+                <UserAvatar
+                  name={user?.name}
+                  avatarUrl={user?.avatarUrl}
+                  size="sm"
+                />
+                <div className={`min-w-0 ${labelClassName}`}>
+                  <p className="truncate text-sm font-semibold text-layer-foreground">
+                    {user ? `${user.name} ${user.lastName}` : "..."}
+                  </p>
+                  <p className="truncate text-xs text-muted-foreground-2">
+                    {roleLabel}
+                  </p>
+                </div>
+              </div>
+
+              <div className={`flex items-center gap-2 ${isCollapsed ? "lg:flex-col" : ""}`}>
                 <Button
                   variant="ghost"
                   size="sm"
-                  isIconOnly
-                  onPress={() => setIsMobileOpen(false)}
-                  aria-label="Cerrar menú"
+                  className="flex-1"
+                  onPress={toggleLanguage}
+                  aria-label="Toggle language"
                 >
-                  <X className="h-5 w-5" aria-hidden="true" />
+                  <Languages className="h-4 w-4 shrink-0" aria-hidden="true" />
+                  <span className={labelClassName}>
+                    {language === "en" ? "ES" : "EN"}
+                  </span>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1"
+                  onPress={() => logout()}
+                  aria-label="Logout"
+                >
+                  <LogOut className="h-4 w-4 shrink-0" aria-hidden="true" />
+                  <span className={labelClassName}>
+                    {language === "en" ? "Log out" : "Salir"}
+                  </span>
                 </Button>
               </div>
-              <SidebarContent
-                navItems={navItems}
-                roleLabel={roleLabel}
-                dashboardHref={dashboardHref}
-                onNavigate={() => setIsMobileOpen(false)}
-              />
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+            </div>
+          </div>
+        </div>
+      </div>
+      {/* End Sidebar */}
 
-      <main className="p-4 sm:p-6 lg:ml-64 lg:p-10">{children}</main>
+      <main
+        className={`p-4 sm:p-6 lg:p-10 transition-[margin] duration-300 ${
+          isCollapsed ? "lg:ml-16" : "lg:ml-64"
+        }`}
+      >
+        {children}
+      </main>
     </div>
   );
 }

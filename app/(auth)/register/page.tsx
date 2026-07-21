@@ -4,20 +4,14 @@ import Link from "next/link";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  Button,
-  FieldError,
-  Input,
-  Label,
-  Spinner,
-  TextField,
-} from "@heroui/react";
+import { Button, Spinner } from "@heroui/react";
 import { Mail, User, UserPlus } from "lucide-react";
 import { useLanguageStore } from "@/store/language-store";
 import { authContent } from "@/lib/i18n/auth-content";
 import { useRegister } from "@/features/auth/hooks/use-register";
 import { PasswordField } from "@/features/auth/components/password-field";
 import { AvatarPicker } from "@/features/auth/components/avatar-picker";
+import { TextField } from "@/components/ui/text-field";
 import {
   registerSchema,
   type RegisterFormValues,
@@ -106,30 +100,13 @@ export default function RegisterPage() {
             name="name"
             render={({ field }) => (
               <TextField
-                isInvalid={!!errors.name}
-                fullWidth
-                className="flex flex-col gap-1.5"
-              >
-                <Label className="text-sm font-medium text-foreground">
-                  {t.name}
-                </Label>
-                <div className="relative">
-                  <User
-                    className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted"
-                    aria-hidden="true"
-                  />
-                  <Input
-                    {...field}
-                    fullWidth
-                    placeholder={t.namePlaceholder}
-                    autoComplete="given-name"
-                    className="pl-9"
-                  />
-                </div>
-                <FieldError className="text-xs">
-                  {errors.name?.message}
-                </FieldError>
-              </TextField>
+                {...field}
+                label={t.name}
+                icon={User}
+                placeholder={t.namePlaceholder}
+                autoComplete="given-name"
+                error={errors.name?.message}
+              />
             )}
           />
 
@@ -138,30 +115,13 @@ export default function RegisterPage() {
             name="lastName"
             render={({ field }) => (
               <TextField
-                isInvalid={!!errors.lastName}
-                fullWidth
-                className="flex flex-col gap-1.5"
-              >
-                <Label className="text-sm font-medium text-foreground">
-                  {t.lastName}
-                </Label>
-                <div className="relative">
-                  <User
-                    className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted"
-                    aria-hidden="true"
-                  />
-                  <Input
-                    {...field}
-                    fullWidth
-                    placeholder={t.lastNamePlaceholder}
-                    autoComplete="family-name"
-                    className="pl-9"
-                  />
-                </div>
-                <FieldError className="text-xs">
-                  {errors.lastName?.message}
-                </FieldError>
-              </TextField>
+                {...field}
+                label={t.lastName}
+                icon={User}
+                placeholder={t.lastNamePlaceholder}
+                autoComplete="family-name"
+                error={errors.lastName?.message}
+              />
             )}
           />
         </div>
@@ -171,31 +131,14 @@ export default function RegisterPage() {
           name="email"
           render={({ field }) => (
             <TextField
-              isInvalid={!!errors.email}
-              fullWidth
-              className="flex flex-col gap-1.5"
-            >
-              <Label className="text-sm font-medium text-foreground">
-                {t.email}
-              </Label>
-              <div className="relative">
-                <Mail
-                  className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted"
-                  aria-hidden="true"
-                />
-                <Input
-                  {...field}
-                  fullWidth
-                  type="email"
-                  placeholder={t.emailPlaceholder}
-                  autoComplete="email"
-                  className="pl-9"
-                />
-              </div>
-              <FieldError className="text-xs">
-                {errors.email?.message}
-              </FieldError>
-            </TextField>
+              {...field}
+              label={t.email}
+              icon={Mail}
+              type="email"
+              placeholder={t.emailPlaceholder}
+              autoComplete="email"
+              error={errors.email?.message}
+            />
           )}
         />
 

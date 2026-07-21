@@ -1,4 +1,4 @@
-import axios, { AxiosError } from "axios";
+import axios, { AxiosError, type AxiosResponse } from "axios";
 import type { ApiErrorResponse, ApiSuccessResponse } from "@/types/api";
 import { useAuthStore } from "@/store/auth-store";
 
@@ -27,7 +27,11 @@ export interface ApiError {
 apiClient.interceptors.response.use(
   (response) => {
     const envelope = response.data as ApiSuccessResponse<unknown>;
-    return envelope?.data;
+    // El interceptor desenvuelve el envelope y retorna solo `data`, no un
+    // AxiosResponse completo. Los helpers apiGet/apiPost/etc. ya asumen esto
+    // (ver comentario debajo) y hacen el cast final a T; este cast solo
+    // satisface la firma que espera Axios para el callback `fulfilled`.
+    return envelope?.data as unknown as AxiosResponse;
   },
   (error: AxiosError<ApiErrorResponse>) => {
     const status = error.response?.status ?? 0;

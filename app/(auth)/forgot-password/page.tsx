@@ -4,11 +4,12 @@ import Link from "next/link";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion, AnimatePresence } from "framer-motion";
-import { Button, FieldError, Input, Label, Spinner, TextField } from "@heroui/react";
-import { CheckCircle2 } from "lucide-react";
+import { Button, Spinner } from "@heroui/react";
+import { CheckCircle2, Mail } from "lucide-react";
 import { useLanguageStore } from "@/store/language-store";
 import { authContent } from "@/lib/i18n/auth-content";
 import { useForgotPassword } from "@/features/auth/hooks/use-forgot-password";
+import { TextField } from "@/components/ui/text-field";
 import {
   forgotPasswordSchema,
   type ForgotPasswordFormValues,
@@ -93,24 +94,14 @@ export default function ForgotPasswordPage() {
           name="email"
           render={({ field }) => (
             <TextField
-              isInvalid={!!errors.email}
-              fullWidth
-              className="flex flex-col gap-1.5"
-            >
-              <Label className="text-sm font-medium text-foreground">
-                {t.email}
-              </Label>
-              <Input
-                {...field}
-                fullWidth
-                type="email"
-                placeholder={t.emailPlaceholder}
-                autoComplete="email"
-              />
-              <FieldError className="text-xs">
-                {errors.email?.message}
-              </FieldError>
-            </TextField>
+              {...field}
+              label={t.email}
+              icon={Mail}
+              type="email"
+              placeholder={t.emailPlaceholder}
+              autoComplete="email"
+              error={errors.email?.message}
+            />
           )}
         />
 

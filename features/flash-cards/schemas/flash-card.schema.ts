@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isBlankRichText } from "@/lib/utils/rich-text";
 import { FLASH_CARD_TYPES } from "../types/flash-card.types";
 
 /**
@@ -18,7 +19,14 @@ export const flashCardSchema = z
       message: "El tipo de flashcard no es válido.",
     }),
     title: z.string().min(1, "El título es requerido."),
-    content: z.string().min(1, "El contenido es requerido."),
+    // RichTextEditor guarda HTML: un editor "vacío" produce "<p></p>", que
+    // .min(1) por sí solo no detectaría como vacío.
+    content: z
+      .string()
+      .min(1, "El contenido es requerido.")
+      .refine((value) => !isBlankRichText(value), {
+        message: "El contenido es requerido.",
+      }),
     image: z
       .union([z.string().url("La imagen debe ser una URL válida."), z.literal("")])
       .optional(),

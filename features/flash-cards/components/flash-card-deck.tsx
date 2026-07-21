@@ -1,12 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import useEmblaCarousel from "embla-carousel-react";
-import { motion } from "framer-motion";
-import { BookX, ChevronLeft, ChevronRight, PartyPopper } from "lucide-react";
+import { BookX, ChevronLeft, ChevronRight } from "lucide-react";
 import { useLanguageStore } from "@/store/language-store";
 import { FlashCardAvatar } from "./flash-card-avatar";
+import { FlashCardFinishDialog } from "./flash-card-finish-dialog";
+import { FlashCardStepper } from "./flash-card-stepper";
 import { FlashCardStudentCard } from "./flash-card-student-card";
 import {
   FLASH_CARD_TYPE_LABELS,
@@ -24,10 +24,13 @@ interface FlashCardDeckProps {
 /**
  * Mazo de flashcards del estudiante: un carrusel Embla (swipe nativo, igual
  * patrón que ProtectedAreaImageCarousel) con una tarjeta a la vez, chips
- * para saltar directo a una categoría y una barra de progreso. Las
- * flashcards ya llegan ordenadas por categoría (`order` autoasignado en el
- * backend), así que el mazo cuenta una historia: bienvenida → gastronomía →
- * flora y fauna → quiz ambiental → dato curioso → vocabulario.
+ * para saltar directo a una categoría y un stepper de avance (ver
+ * FlashCardStepper). Las flashcards ya llegan ordenadas por categoría
+ * (`order` autoasignado en el backend), así que el mazo cuenta una
+ * historia: bienvenida → gastronomía → flora y fauna → quiz ambiental →
+ * dato curioso → vocabulario. En la última tarjeta, "Siguiente" se
+ * reemplaza por el botón "Terminado" (FlashCardFinishDialog), que celebra
+ * con confeti y deja elegir entre repasar de nuevo o volver al recorrido.
  */
 export function FlashCardDeck({ cards, tourHref }: FlashCardDeckProps) {
   const language = useLanguageStore((state) => state.language);
@@ -106,18 +109,12 @@ export function FlashCardDeck({ cards, tourHref }: FlashCardDeckProps) {
         })}
       </div>
 
-      <div className="flex items-center gap-3">
-        <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-default-soft">
-          <motion.div
-            className="h-full rounded-full bg-accent"
-            animate={{ width: `${((selectedIndex + 1) / cards.length) * 100}%` }}
-            transition={{ duration: 0.3 }}
-          />
-        </div>
-        <span className="shrink-0 text-xs font-medium text-muted">
-          {selectedIndex + 1}/{cards.length}
-        </span>
-      </div>
+      <FlashCardStepper
+        total={cards.length}
+        currentIndex={selectedIndex}
+        onStepClick={(index) => emblaApi?.scrollTo(index)}
+        labelText={language === "en" ? "Card" : "Tarjeta"}
+      />
 
       <div className="group relative">
         <div ref={emblaRef} className="overflow-hidden">
@@ -152,53 +149,33 @@ export function FlashCardDeck({ cards, tourHref }: FlashCardDeckProps) {
         )}
       </div>
 
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3">
         <button
           type="button"
           disabled={isFirst}
           onClick={() => emblaApi?.scrollPrev()}
-          className="text-sm font-medium text-muted transition-colors hover:text-foreground disabled:opacity-0"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-layer-hover disabled:pointer-events-none disabled:opacity-0"
         >
-          {language === "en" ? "← Previous" : "← Anterior"}
+          <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+          {language === "en" ? "Previous" : "Anterior"}
         </button>
-        {!isLast ? (
+
+        {isLast ? (
+          <FlashCardFinishDialog
+            tourHref={tourHref}
+            onReview={() => emblaApi?.scrollTo(0)}
+          />
+        ) : (
           <button
             type="button"
             onClick={() => emblaApi?.scrollNext()}
-            className="text-sm font-semibold text-accent hover:underline"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-accent-foreground transition-colors hover:bg-accent-hover"
           >
-            {language === "en" ? "Next →" : "Siguiente →"}
+            {language === "en" ? "Next" : "Siguiente"}
+            <ChevronRight className="h-4 w-4" aria-hidden="true" />
           </button>
-        ) : (
-          <span className="text-sm font-medium text-muted">
-            {language === "en" ? "Last card" : "Última tarjeta"}
-          </span>
         )}
       </div>
-
-      {isLast && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col items-center gap-3 rounded-2xl border border-border bg-accent-soft p-6 text-center"
-        >
-          <PartyPopper
-            className="h-6 w-6 text-accent-soft-foreground"
-            aria-hidden="true"
-          />
-          <p className="text-sm font-medium text-accent-soft-foreground">
-            {language === "en"
-              ? "You've reached the end of the deck. Swipe back anytime to review."
-              : "Llegaste al final del mazo. Puedes repasar deslizando hacia atrás cuando quieras."}
-          </p>
-          <Link
-            href={tourHref}
-            className="text-sm font-semibold text-accent hover:underline"
-          >
-            {language === "en" ? "Back to tour" : "Volver al recorrido"}
-          </Link>
-        </motion.div>
-      )}
     </div>
   );
 }

@@ -5,19 +5,13 @@ import { useRouter } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  Button,
-  Description,
-  InputOTP,
-  Label,
-  REGEXP_ONLY_DIGITS,
-  Spinner,
-} from "@heroui/react";
+import { Button, Spinner } from "@heroui/react";
 import { CheckCircle2 } from "lucide-react";
 import { useLanguageStore } from "@/store/language-store";
 import { authContent } from "@/lib/i18n/auth-content";
 import { useResetPassword } from "@/features/auth/hooks/use-reset-password";
 import { PasswordField } from "@/features/auth/components/password-field";
+import { PinCodeInput } from "@/components/ui/pin-code-input";
 import {
   resetPasswordSchema,
   type ResetPasswordFormValues,
@@ -94,31 +88,17 @@ export default function ResetPasswordPage() {
           name="code"
           render={({ field }) => (
             <div className="flex flex-col items-center gap-2">
-              <Label className="text-sm font-medium text-foreground">
+              <label className="text-sm font-medium text-foreground">
                 {t.code}
-              </Label>
-              <InputOTP
-                maxLength={6}
-                pattern={REGEXP_ONLY_DIGITS}
+              </label>
+              <PinCodeInput
+                length={6}
                 value={field.value}
                 onChange={field.onChange}
+                onBlur={field.onBlur}
                 isInvalid={!!errors.code}
-              >
-                <InputOTP.Group>
-                  {[0, 1, 2].map((index) => (
-                    <InputOTP.Slot key={index} index={index} />
-                  ))}
-                </InputOTP.Group>
-                <InputOTP.Separator />
-                <InputOTP.Group>
-                  {[3, 4, 5].map((index) => (
-                    <InputOTP.Slot key={index} index={index} />
-                  ))}
-                </InputOTP.Group>
-              </InputOTP>
-              <Description className="text-xs text-muted">
-                {t.codeHint}
-              </Description>
+              />
+              <p className="text-xs text-muted-foreground-1">{t.codeHint}</p>
               {errors.code?.message && (
                 <span className="text-xs text-danger">
                   {errors.code.message}

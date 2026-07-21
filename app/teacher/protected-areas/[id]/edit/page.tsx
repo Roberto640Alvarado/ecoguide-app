@@ -52,7 +52,7 @@ export default function EditProtectedAreaPage() {
         </Link>
       </div>
 
-      <div className="max-w-2xl rounded-3xl border border-border bg-surface p-6">
+      <div className="w-full rounded-3xl border border-border bg-surface p-6">
         {isLoading ? (
           <div className="flex justify-center py-16">
             <Spinner size="md" />

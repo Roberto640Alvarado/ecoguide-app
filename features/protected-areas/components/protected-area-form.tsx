@@ -3,16 +3,10 @@
 import dynamic from "next/dynamic";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  Button,
-  FieldError,
-  Input,
-  Label,
-  Spinner,
-  TextArea,
-  TextField,
-} from "@heroui/react";
+import { Button, Spinner } from "@heroui/react";
 import { MapPin } from "lucide-react";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
+import { TextField } from "@/components/ui/text-field";
 import { ToggleField } from "@/components/ui/toggle-field";
 import { useLanguageStore } from "@/store/language-store";
 import { ImageUploader } from "./image-uploader";
@@ -47,6 +41,28 @@ interface ProtectedAreaFormProps {
   submitLabel: string;
   onSubmit: (values: ProtectedAreaFormValues) => void;
   onCancel: () => void;
+}
+
+function FormSection({
+  title,
+  description,
+  children,
+}: {
+  title: string;
+  description?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="flex flex-col gap-4 rounded-2xl border border-border bg-surface p-5 sm:p-6">
+      <div>
+        <h2 className="text-sm font-semibold text-foreground">{title}</h2>
+        {description && (
+          <p className="mt-0.5 text-xs text-muted">{description}</p>
+        )}
+      </div>
+      {children}
+    </section>
+  );
 }
 
 export function ProtectedAreaForm({
@@ -94,123 +110,103 @@ export function ProtectedAreaForm({
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      className="flex flex-col gap-6"
+      className="flex flex-col gap-5"
       noValidate
     >
-      <div className="flex flex-col gap-2">
-        <Label className="text-sm font-medium text-foreground">
-          {language === "en" ? "Location" : "Ubicación"}
-        </Label>
-        <p className="text-xs text-muted">
-          {language === "en"
-            ? "Click anywhere on the map (or drag the pin) to mark the exact location."
-            : "Haz clic en cualquier punto del mapa (o arrastra el pin) para marcar la ubicación exacta."}
-        </p>
+      <FormSection
+        title={language === "en" ? "Basic information" : "Información básica"}
+      >
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-[2fr_1fr] sm:items-end">
+          <Controller
+            control={control}
+            name="name"
+            render={({ field }) => (
+              <TextField
+                {...field}
+                label={language === "en" ? "Name" : "Nombre"}
+                placeholder="Parque Nacional El Imposible"
+                error={errors.name?.message}
+              />
+            )}
+          />
 
-        <LocationPickerMap
-          latitude={latitude}
-          longitude={longitude}
-          onLocationChange={handleLocationChange}
-        />
+          <Controller
+            control={control}
+            name="isPublished"
+            render={({ field }) => (
+              <ToggleField
+                label={language === "en" ? "Published" : "Publicada"}
+                checked={field.value}
+                onChange={field.onChange}
+              />
+            )}
+          />
+        </div>
 
-        <span className="flex w-fit items-center gap-1.5 rounded-full bg-default-soft px-3 py-1 text-xs font-medium text-muted">
-          <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
-          {latitude.toFixed(6)}, {longitude.toFixed(6)}
-        </span>
-
-        {(errors.latitude || errors.longitude) && (
-          <FieldError className="text-xs">
-            {errors.latitude?.message ?? errors.longitude?.message}
-          </FieldError>
-        )}
-      </div>
-
-      <Controller
-        control={control}
-        name="name"
-        render={({ field }) => (
-          <TextField
-            isInvalid={!!errors.name}
-            fullWidth
-            className="flex flex-col gap-1.5"
-          >
-            <Label className="text-sm font-medium text-foreground">
-              {language === "en" ? "Name" : "Nombre"}
-            </Label>
-            <Input
-              {...field}
-              fullWidth
-              placeholder="Parque Nacional El Imposible"
-            />
-            <FieldError className="text-xs">{errors.name?.message}</FieldError>
-          </TextField>
-        )}
-      />
-
-      <Controller
-        control={control}
-        name="description"
-        render={({ field }) => (
-          <TextField
-            isInvalid={!!errors.description}
-            fullWidth
-            className="flex flex-col gap-1.5"
-          >
-            <Label className="text-sm font-medium text-foreground">
-              {language === "en" ? "Description" : "Descripción"}
-            </Label>
-            <TextArea
-              {...field}
-              fullWidth
-              rows={4}
+        <Controller
+          control={control}
+          name="description"
+          render={({ field }) => (
+            <RichTextEditor
+              value={field.value}
+              onChange={field.onChange}
+              onBlur={field.onBlur}
+              label={language === "en" ? "Description" : "Descripción"}
               placeholder={
                 language === "en"
                   ? "Cloud forest reserve in Ahuachapán."
                   : "Reserva de bosque nuboso en Ahuachapán."
               }
+              error={errors.description?.message}
             />
-            <FieldError className="text-xs">
-              {errors.description?.message}
-            </FieldError>
-          </TextField>
-        )}
-      />
-
-      <div className="flex flex-col gap-2">
-        <Label className="text-sm font-medium text-foreground">
-          {language === "en" ? "Images" : "Imágenes"}
-        </Label>
-        <ImageUploader
-          images={images}
-          onChange={(value) =>
-            setValue("images", value, {
-              shouldValidate: true,
-              shouldDirty: true,
-            })
-          }
+          )}
         />
-        {errors.images && (
-          <FieldError className="text-xs">{errors.images.message}</FieldError>
-        )}
+      </FormSection>
+
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:items-start">
+        <FormSection
+          title={language === "en" ? "Location" : "Ubicación"}
+          description={
+            language === "en"
+              ? "Click anywhere on the map (or drag the pin) to mark the exact location."
+              : "Haz clic en cualquier punto del mapa (o arrastra el pin) para marcar la ubicación exacta."
+          }
+        >
+          <LocationPickerMap
+            latitude={latitude}
+            longitude={longitude}
+            onLocationChange={handleLocationChange}
+          />
+
+          <span className="flex w-fit items-center gap-1.5 rounded-full bg-default-soft px-3 py-1 text-xs font-medium text-muted">
+            <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
+            {latitude.toFixed(6)}, {longitude.toFixed(6)}
+          </span>
+
+          {(errors.latitude || errors.longitude) && (
+            <p className="text-xs text-danger">
+              {errors.latitude?.message ?? errors.longitude?.message}
+            </p>
+          )}
+        </FormSection>
+
+        <FormSection title={language === "en" ? "Images" : "Imágenes"}>
+          <ImageUploader
+            images={images}
+            onChange={(value) =>
+              setValue("images", value, {
+                shouldValidate: true,
+                shouldDirty: true,
+              })
+            }
+          />
+          {errors.images && (
+            <p className="text-xs text-danger">{errors.images.message}</p>
+          )}
+        </FormSection>
       </div>
 
-      <Controller
-        control={control}
-        name="isPublished"
-        render={({ field }) => (
-          <ToggleField
-            label={
-              language === "en"
-                ? "Published (visible to students)"
-                : "Publicada (visible para estudiantes)"
-            }
-            checked={field.value}
-            onChange={field.onChange}
-          />
-        )}
-      />
-
-      <div className="mt-2 flex justify-end gap-2">
+      <div className="flex justify-end gap-2">
         <Button variant="outline" type="button" onPress={onCancel}>
           {language === "en" ? "Cancel" : "Cancelar"}
         </Button>

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Open_Sans } from "next/font/google";
 import { Providers } from "./providers";
+import PrelineScriptWrapper from "@/components/layout/preline-script-wrapper";
 import "./globals.css";
 
 const openSans = Open_Sans({
@@ -23,6 +24,7 @@ export default function RootLayout({
     <html lang="es" suppressHydrationWarning className={openSans.variable}>
       <body className="min-h-full flex flex-col bg-background text-foreground antialiased">
         <Providers>{children}</Providers>
+        <PrelineScriptWrapper />
       </body>
     </html>
   );

@@ -3,6 +3,7 @@
 import L from "leaflet";
 import { useRouter } from "next/navigation";
 import { MapContainer, Marker, TileLayer, Tooltip } from "react-leaflet";
+import { useMediaQuery } from "@/hooks/use-media-query";
 import type { ProtectedArea } from "../types/protected-area.types";
 
 /** Centro geográfico aproximado de El Salvador (mismo valor que ProtectedAreaForm). */
@@ -35,14 +36,20 @@ interface ProtectedAreasMapProps {
 }
 
 /**
- * Mapa de solo lectura, "estático" (sin drag/zoom/scroll) con un marcador
- * por área protegida y su nombre siempre visible al lado, como una
- * ilustración fija en vez de un mapa interactivo de exploración libre. Un
- * clic en el marcador o en su etiqueta lleva directo al detalle del área.
+ * Mapa de solo lectura con un marcador por área protegida y su nombre
+ * siempre visible al lado, como una ilustración fija en vez de un mapa
+ * interactivo de exploración libre. El zoom queda fijo (más cercano que
+ * antes, para que El Salvador se vea grande) y sin controles de zoom en
+ * ningún tamaño de pantalla; el arrastre (dragging) solo se habilita por
+ * debajo del breakpoint `lg` (móvil/tablet), donde a este zoom el país
+ * completo no cabe en el ancho disponible y el estudiante necesita poder
+ * moverse para ver los pines que quedan fuera de encuadre. Un clic en el
+ * marcador o en su etiqueta lleva directo al detalle del área.
  */
 export function ProtectedAreasMap({ areas }: ProtectedAreasMapProps) {
   const router = useRouter();
   const icon = buildAreaIcon();
+  const isCompactViewport = useMediaQuery("(max-width: 1023px)");
 
   function goToArea(id: string) {
     router.push(`/student/protected-areas/${id}`);
@@ -51,9 +58,9 @@ export function ProtectedAreasMap({ areas }: ProtectedAreasMapProps) {
   return (
     <MapContainer
       center={[EL_SALVADOR_CENTER.latitude, EL_SALVADOR_CENTER.longitude]}
-      zoom={8.3}
+      zoom={9.3}
       zoomControl={false}
-      dragging={false}
+      dragging={isCompactViewport}
       scrollWheelZoom={false}
       doubleClickZoom={false}
       touchZoom={false}

@@ -28,6 +28,7 @@ export function UnpublishAreaButton({ area }: UnpublishAreaButtonProps) {
           aria-label={language === "en" ? "Unpublish" : "Despublicar"}
         >
           <EyeOff className="h-4 w-4" aria-hidden="true" />
+          {language === "en" ? "Unpublish" : "Despublicar"}
         </Button>
       }
       icon={<EyeOff className="h-5 w-5" aria-hidden="true" />}

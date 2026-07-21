@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { FieldError, Input, Label, TextField } from "@heroui/react";
+import { useId, useState } from "react";
 import { Eye, EyeOff, KeyRound } from "lucide-react";
 
 interface SecretFieldProps {
@@ -28,17 +27,20 @@ export function SecretField({
   description,
 }: SecretFieldProps) {
   const [isVisible, setIsVisible] = useState(false);
+  const inputId = `secret-${useId().replace(/:/g, "")}`;
 
   return (
-    <TextField isInvalid={isInvalid} fullWidth className="flex flex-col gap-1.5">
-      <Label className="text-sm font-medium text-foreground">{label}</Label>
+    <div className="flex flex-col gap-1.5">
+      <label htmlFor={inputId} className="text-sm font-medium text-foreground">
+        {label}
+      </label>
       <div className="relative">
         <KeyRound
-          className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted"
+          className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground-1"
           aria-hidden="true"
         />
-        <Input
-          fullWidth
+        <input
+          id={inputId}
           name={name}
           value={value}
           onChange={(e) => onChange(e.target.value)}
@@ -46,25 +48,30 @@ export function SecretField({
           type={isVisible ? "text" : "password"}
           placeholder={placeholder}
           autoComplete="off"
-          className="pl-9 pr-10"
+          aria-invalid={isInvalid}
+          className={`py-2.5 sm:py-3 pl-9 pr-10 block w-full bg-layer border rounded-lg sm:text-sm text-foreground placeholder:text-muted-foreground-1 focus:outline-hidden focus:ring-1 disabled:opacity-50 disabled:pointer-events-none ${
+            isInvalid
+              ? "border-danger focus:border-danger focus:ring-danger"
+              : "border-layer-line focus:border-primary-focus focus:ring-primary-focus"
+          }`}
         />
         <button
           type="button"
           onClick={() => setIsVisible((prev) => !prev)}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted transition-colors hover:text-foreground"
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground-1 transition-colors hover:text-foreground"
           aria-label={isVisible ? "Ocultar" : "Mostrar"}
         >
           {isVisible ? (
-            <EyeOff className="h-4 w-4" aria-hidden="true" />
+            <EyeOff className="size-4" aria-hidden="true" />
           ) : (
-            <Eye className="h-4 w-4" aria-hidden="true" />
+            <Eye className="size-4" aria-hidden="true" />
           )}
         </button>
       </div>
       {description && !errorMessage && (
-        <p className="text-xs text-muted">{description}</p>
+        <p className="text-xs text-muted-foreground-1">{description}</p>
       )}
-      <FieldError className="text-xs">{errorMessage}</FieldError>
-    </TextField>
+      {errorMessage && <p className="text-xs text-danger">{errorMessage}</p>}
+    </div>
   );
 }
