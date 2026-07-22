@@ -97,7 +97,7 @@ export function ProviderModelField({
         </option>
         {activeModels.map((m) => (
           <option key={m.id} value={m.model}>
-            {m.name} ({m.model})
+            {m.name === m.model ? m.name : `${m.name} (${m.model})`}
           </option>
         ))}
       </SelectField>

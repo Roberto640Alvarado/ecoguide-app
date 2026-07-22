@@ -11,5 +11,11 @@ export function createTest(payload: TestFormValues) {
 }
 
 export function updateTest(id: string, payload: Partial<TestFormValues>) {
-  return apiPatch<Test>(`/tests/${id}`, payload);
+  // UpdateTestDto nunca acepta `protectedAreaId` (no se puede reasignar el
+  // examen a otra área) — si viaja, la API responde 400 "should not exist"
+  // por el whitelist estricto del ValidationPipe.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { protectedAreaId: _protectedAreaId, ...rest } = payload;
+
+  return apiPatch<Test>(`/tests/${id}`, rest);
 }

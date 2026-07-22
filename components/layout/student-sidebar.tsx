@@ -1,6 +1,6 @@
 "use client";
 
-import { LayoutDashboard, MapPinned } from "lucide-react";
+import { LayoutDashboard, MapPinned, TrendingUp } from "lucide-react";
 import { DashboardShell, type DashboardNavItem } from "./dashboard-shell";
 import { useLanguageStore } from "@/store/language-store";
 
@@ -24,6 +24,11 @@ export function StudentSidebar({ children }: StudentSidebarProps) {
       label: language === "en" ? "Protected Areas" : "Áreas protegidas",
       href: "/student/protected-areas",
       icon: MapPinned,
+    },
+    {
+      label: language === "en" ? "My progress" : "Mi progreso",
+      href: "/student/progress",
+      icon: TrendingUp,
     },
   ];
 

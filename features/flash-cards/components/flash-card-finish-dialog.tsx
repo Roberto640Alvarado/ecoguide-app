@@ -16,8 +16,11 @@ import {
 } from "@heroui/react";
 import { PartyPopper, RotateCcw } from "lucide-react";
 import { useLanguageStore } from "@/store/language-store";
+import { useMarkFlashcardsCompleted } from "@/features/student-progress/hooks/use-mark-flashcards-completed";
 
 interface FlashCardFinishDialogProps {
+  /** Área protegida del mazo, para marcar las flashcards como completadas. */
+  protectedAreaId: string;
   /** A dónde volver si el estudiante elige salir del mazo. */
   tourHref: string;
   /** Vuelve a la primera tarjeta del mazo (elige "Repasar de nuevo"). */
@@ -44,15 +47,23 @@ function launchConfetti() {
  * de apertura, así que el confeti y el modal disparan en el mismo click.
  */
 export function FlashCardFinishDialog({
+  protectedAreaId,
   tourHref,
   onReview,
 }: FlashCardFinishDialogProps) {
   const language = useLanguageStore((state) => state.language);
   const router = useRouter();
+  const { mutate: markFlashcardsCompleted } =
+    useMarkFlashcardsCompleted(protectedAreaId);
+
+  const handleFinish = () => {
+    launchConfetti();
+    markFlashcardsCompleted();
+  };
 
   return (
     <AlertDialogRoot>
-      <Button variant="primary" onPress={launchConfetti} className="gap-1.5">
+      <Button variant="primary" onPress={handleFinish} className="gap-1.5">
         <PartyPopper className="h-4 w-4" aria-hidden="true" />
         {language === "en" ? "Finished" : "Terminado"}
       </Button>

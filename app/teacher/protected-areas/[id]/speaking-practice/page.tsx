@@ -6,7 +6,6 @@ import { ArrowLeft, Mic } from "lucide-react";
 import { Spinner } from "@heroui/react";
 import { useLanguageStore } from "@/store/language-store";
 import { useProtectedArea } from "@/features/protected-areas/hooks/use-protected-area";
-import { ProtectedAreaContextBanner } from "@/features/protected-areas/components/protected-area-context-banner";
 import { useSpeakingPracticeByArea } from "@/features/speaking-practices/hooks/use-speaking-practice-by-area";
 import { useCreateSpeakingPractice } from "@/features/speaking-practices/hooks/use-create-speaking-practice";
 import { useUpdateSpeakingPractice } from "@/features/speaking-practices/hooks/use-update-speaking-practice";
@@ -58,12 +57,17 @@ export default function SpeakingPracticeConfigPage() {
         </span>
         <div>
           <h1 className="text-xl font-bold text-foreground">
-            {language === "en" ? "Speaking practice" : "Práctica de speaking"}
+            {isLoading
+              ? language === "en"
+                ? "Loading..."
+                : "Cargando..."
+              : (area?.name ??
+                (language === "en" ? "Speaking practice" : "Práctica de speaking"))}
           </h1>
           <p className="text-sm text-muted">
             {language === "en"
-              ? "One speaking exercise per protected area."
-              : "Una práctica de speaking por área protegida."}
+              ? "Speaking practice configuration"
+              : "Configuración de práctica de speaking"}
           </p>
         </div>
       </div>
@@ -80,9 +84,9 @@ export default function SpeakingPracticeConfigPage() {
         </p>
       ) : (
         <>
-          <ProtectedAreaContextBanner area={area} />
           <SpeakingPracticeForm
             protectedAreaId={params.id}
+            area={{ name: area.name, description: area.description }}
             defaultValues={
               practice
                 ? {

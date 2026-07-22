@@ -19,6 +19,23 @@ export function fetchConversation(id: string) {
   return apiGet<ChatbotConversation>(`/chatbot-conversations/${id}`);
 }
 
+/** Uso del docente: conversaciones de un estudiante específico en un área. */
+export function fetchConversationsForStudent(
+  studentId: string,
+  protectedAreaId: string,
+  params: FindConversationsParams,
+) {
+  return apiGet<PaginatedResult<ChatbotConversation>>(
+    `/chatbot-conversations/teacher/students/${studentId}/by-area/${protectedAreaId}`,
+    { params },
+  );
+}
+
+/** Uso del docente: transcripción completa de una conversación. */
+export function fetchConversationForTeacher(id: string) {
+  return apiGet<ChatbotConversation>(`/chatbot-conversations/teacher/${id}`);
+}
+
 export function startConversation(protectedAreaId: string) {
   return apiPost<ChatbotConversation>("/chatbot-conversations", {
     protectedAreaId,

@@ -6,7 +6,6 @@ import { ArrowLeft, ClipboardCheck } from "lucide-react";
 import { Spinner } from "@heroui/react";
 import { useLanguageStore } from "@/store/language-store";
 import { useProtectedArea } from "@/features/protected-areas/hooks/use-protected-area";
-import { ProtectedAreaContextBanner } from "@/features/protected-areas/components/protected-area-context-banner";
 import { useTestByArea } from "@/features/tests/hooks/use-test-by-area";
 import { useCreateTest } from "@/features/tests/hooks/use-create-test";
 import { useUpdateTest } from "@/features/tests/hooks/use-update-test";
@@ -55,12 +54,14 @@ export default function TestConfigPage() {
         </span>
         <div>
           <h1 className="text-xl font-bold text-foreground">
-            {language === "en" ? "Test" : "Examen"}
+            {isLoading
+              ? language === "en"
+                ? "Loading..."
+                : "Cargando..."
+              : (area?.name ?? (language === "en" ? "Test" : "Examen"))}
           </h1>
           <p className="text-sm text-muted">
-            {language === "en"
-              ? "One test per protected area, with as many questions as you need."
-              : "Un examen por área protegida, con las preguntas que necesites."}
+            {language === "en" ? "Test configuration" : "Configuración del examen"}
           </p>
         </div>
       </div>
@@ -77,7 +78,6 @@ export default function TestConfigPage() {
         </p>
       ) : (
         <>
-          <ProtectedAreaContextBanner area={area} />
           <TestForm
             protectedAreaId={params.id}
             defaultValues={

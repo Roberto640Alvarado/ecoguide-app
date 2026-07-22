@@ -9,6 +9,8 @@ import { useEffect, useState } from "react";
 import { parseAsString, useQueryState } from "nuqs";
 import { useLanguageStore } from "@/store/language-store";
 import { useProtectedAreas } from "@/features/protected-areas/hooks/use-protected-areas";
+import { useStudentProgressOverview } from "@/features/student-progress/hooks/use-student-progress-overview";
+import type { StudentAreaProgress } from "@/features/student-progress/types/student-progress.types";
 import { stripHtmlToText } from "@/lib/utils/rich-text";
 
 const ProtectedAreasMap = dynamic(
@@ -56,8 +58,12 @@ export default function StudentProtectedAreasPage() {
     limit: 100,
     sort: "name:asc",
   });
+  const { data: progressData } = useStudentProgressOverview({ limit: 100 });
 
   const allAreas = allAreasData?.items ?? [];
+  const progressByArea = new Map(
+    (progressData?.items ?? []).map((item) => [item.protectedAreaId, item]),
+  );
   const normalizedSearch = search.trim().toLowerCase();
   const filteredAreas = normalizedSearch
     ? allAreas.filter((area) =>
@@ -126,14 +132,26 @@ export default function StudentProtectedAreasPage() {
           {/* Mobile: fila horizontal deslizable con scroll-snap. */}
           <div className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 sm:hidden">
             {filteredAreas.map((area, index) => (
-              <AreaCard key={area.id} area={area} index={index} variant="mobile" />
+              <AreaCard
+                key={area.id}
+                area={area}
+                progress={progressByArea.get(area.id)}
+                index={index}
+                variant="mobile"
+              />
             ))}
           </div>
 
           {/* Desktop/tablet: grilla normal. */}
           <div className="hidden grid-cols-2 gap-4 sm:grid lg:grid-cols-3">
             {filteredAreas.map((area, index) => (
-              <AreaCard key={area.id} area={area} index={index} variant="grid" />
+              <AreaCard
+                key={area.id}
+                area={area}
+                progress={progressByArea.get(area.id)}
+                index={index}
+                variant="grid"
+              />
             ))}
           </div>
         </>
@@ -149,21 +167,17 @@ interface AreaCardProps {
     description: string;
     images: string[];
   };
+  progress?: StudentAreaProgress;
   index: number;
   variant: "mobile" | "grid";
 }
 
-// TODO(StudentProgress): el módulo StudentProgress todavía no existe en la
-// API (ver CLAUDE.md, sección "Pendientes en la API"). El progreso y la
-// nota de abajo son datos de ejemplo quemados solo para previsualizar el
-// diseño de la tarjeta; hay que reemplazarlos por el hook real
-// (useStudentProgress(area.id) o similar) en cuanto el endpoint exista.
-const MOCK_PROGRESS_PERCENT = 45;
-const MOCK_GRADE = "8.5";
-
-function AreaCard({ area, index, variant }: AreaCardProps) {
+function AreaCard({ area, progress, index, variant }: AreaCardProps) {
   const language = useLanguageStore((state) => state.language);
   const coverImage = area.images[0];
+  const progressPercent = progress?.progressPercent ?? 0;
+  const stepsCompleted = progress?.stepsCompleted ?? 0;
+  const stepsTotal = progress?.stepsTotal ?? 0;
 
   return (
     <motion.div
@@ -217,13 +231,14 @@ function AreaCard({ area, index, variant }: AreaCardProps) {
               {language === "en" ? "Your progress" : "Tu avance"}
             </span>
             <span className="rounded-full bg-accent-soft px-2.5 py-0.5 text-xs font-semibold text-accent-soft-foreground">
-              {language === "en" ? "Grade" : "Nota"} {MOCK_GRADE}
+              {stepsCompleted}/{stepsTotal}{" "}
+              {language === "en" ? "steps" : "pasos"}
             </span>
           </div>
           <div className="h-1.5 w-full overflow-hidden rounded-full bg-default-soft">
             <div
-              className="h-full rounded-full bg-accent"
-              style={{ width: `${MOCK_PROGRESS_PERCENT}%` }}
+              className="h-full rounded-full bg-accent transition-all"
+              style={{ width: `${progressPercent}%` }}
             />
           </div>
         </div>

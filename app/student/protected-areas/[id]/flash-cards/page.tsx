@@ -70,6 +70,7 @@ export default function StudentFlashCardsPage() {
         >
           <FlashCardDeck
             cards={data?.items ?? []}
+            protectedAreaId={params.id}
             tourHref={`/student/protected-areas/${params.id}/tour`}
           />
         </motion.div>

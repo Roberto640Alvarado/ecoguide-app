@@ -13,6 +13,7 @@ import {
   BookOpen,
   ChevronDown,
   ClipboardCheck,
+  Medal,
   MessageCircle,
   Mic,
   SquarePen,
@@ -62,6 +63,12 @@ export function ProtectedAreaActionsMenu({
       label: language === "en" ? "Test" : "Examen",
       icon: ClipboardCheck,
       href: `/teacher/protected-areas/${areaId}/test`,
+    },
+    {
+      key: "badges",
+      label: language === "en" ? "Badges" : "Insignias",
+      icon: Medal,
+      href: `/teacher/protected-areas/${areaId}/badges`,
     },
     {
       key: "edit",

@@ -16,5 +16,11 @@ export function updateSpeakingPractice(
   id: string,
   payload: Partial<SpeakingPracticeFormValues>,
 ) {
-  return apiPatch<SpeakingPractice>(`/speaking-practices/${id}`, payload);
+  // UpdateSpeakingPracticeDto nunca acepta `protectedAreaId` (no se puede
+  // reasignar la práctica a otra área) — si viaja, la API responde 400
+  // "should not exist" por el whitelist estricto del ValidationPipe.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { protectedAreaId: _protectedAreaId, ...rest } = payload;
+
+  return apiPatch<SpeakingPractice>(`/speaking-practices/${id}`, rest);
 }

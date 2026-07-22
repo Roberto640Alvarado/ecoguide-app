@@ -16,6 +16,18 @@ export function fetchSpeakingResultsByArea(
   );
 }
 
+/** Uso del docente: intentos de speaking de un estudiante específico. */
+export function fetchSpeakingResultsForStudent(
+  studentId: string,
+  protectedAreaId: string,
+  params: FindSpeakingResultsParams,
+) {
+  return apiGet<PaginatedResult<SpeakingResult>>(
+    `/speaking-results/teacher/students/${studentId}/by-area/${protectedAreaId}`,
+    { params },
+  );
+}
+
 export function createSpeakingResult(payload: CreateSpeakingResultPayload) {
   return apiPost<SpeakingResult>("/speaking-results", payload);
 }

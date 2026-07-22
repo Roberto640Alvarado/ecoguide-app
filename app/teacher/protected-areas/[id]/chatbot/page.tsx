@@ -6,7 +6,6 @@ import { ArrowLeft, MessageCircle } from "lucide-react";
 import { Spinner } from "@heroui/react";
 import { useLanguageStore } from "@/store/language-store";
 import { useProtectedArea } from "@/features/protected-areas/hooks/use-protected-area";
-import { ProtectedAreaContextBanner } from "@/features/protected-areas/components/protected-area-context-banner";
 import { useChatbotConfigByArea } from "@/features/chatbot/hooks/use-chatbot-config-by-area";
 import { useCreateChatbotConfig } from "@/features/chatbot/hooks/use-create-chatbot-config";
 import { useUpdateChatbotConfig } from "@/features/chatbot/hooks/use-update-chatbot-config";
@@ -55,11 +54,17 @@ export default function ChatbotConfigPage() {
           <MessageCircle className="h-5 w-5" aria-hidden="true" />
         </span>
         <div>
-          <h1 className="text-xl font-bold text-foreground">Chatbot</h1>
+          <h1 className="text-xl font-bold text-foreground">
+            {isLoading
+              ? language === "en"
+                ? "Loading..."
+                : "Cargando..."
+              : (area?.name ?? "Chatbot")}
+          </h1>
           <p className="text-sm text-muted">
             {language === "en"
-              ? "One chatbot configuration per protected area."
-              : "Una configuración de chatbot por área protegida."}
+              ? "Chatbot configuration"
+              : "Configuración de chatbot"}
           </p>
         </div>
       </div>
@@ -76,9 +81,9 @@ export default function ChatbotConfigPage() {
         </p>
       ) : (
         <>
-          <ProtectedAreaContextBanner area={area} />
           <ChatbotConfigForm
             protectedAreaId={params.id}
+            area={{ name: area.name, description: area.description }}
             defaultValues={
               config
                 ? {

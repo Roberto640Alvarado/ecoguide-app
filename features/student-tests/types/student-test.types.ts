@@ -35,3 +35,26 @@ export interface StudentTestResult {
   answers: AnswerResult[];
   createdAt: string;
 }
+
+/** Uso del docente: incluye la pregunta, opciones y respuesta correcta. */
+export interface TeacherAnswerResult {
+  questionId: string;
+  question: string;
+  options: string[];
+  correctAnswer: string;
+  studentAnswer: string;
+  isCorrect: boolean;
+  points: number;
+}
+
+export interface TeacherStudentTestResult {
+  id: string;
+  protectedAreaId: string;
+  testId: string;
+  attempt: number;
+  score: number;
+  passingScore: number;
+  passed: boolean;
+  answers: TeacherAnswerResult[];
+  createdAt: string;
+}

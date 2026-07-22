@@ -17,6 +17,8 @@ import {
 
 interface FlashCardDeckProps {
   cards: FlashCard[];
+  /** Área protegida del mazo, para marcar las flashcards como completadas. */
+  protectedAreaId: string;
   /** A dónde volver desde la tarjeta de cierre al llegar al final del mazo. */
   tourHref: string;
 }
@@ -32,7 +34,11 @@ interface FlashCardDeckProps {
  * reemplaza por el botón "Terminado" (FlashCardFinishDialog), que celebra
  * con confeti y deja elegir entre repasar de nuevo o volver al recorrido.
  */
-export function FlashCardDeck({ cards, tourHref }: FlashCardDeckProps) {
+export function FlashCardDeck({
+  cards,
+  protectedAreaId,
+  tourHref,
+}: FlashCardDeckProps) {
   const language = useLanguageStore((state) => state.language);
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: false });
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -163,6 +169,7 @@ export function FlashCardDeck({ cards, tourHref }: FlashCardDeckProps) {
 
         {isLast ? (
           <FlashCardFinishDialog
+            protectedAreaId={protectedAreaId}
             tourHref={tourHref}
             onReview={() => emblaApi?.scrollTo(0)}
           />

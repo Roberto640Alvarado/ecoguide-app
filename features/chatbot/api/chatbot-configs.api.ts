@@ -16,5 +16,11 @@ export function updateChatbotConfig(
   id: string,
   payload: Partial<ChatbotConfigFormValues>,
 ) {
-  return apiPatch<ChatbotConfig>(`/chatbot-configs/${id}`, payload);
+  // UpdateChatbotConfigDto nunca acepta `protectedAreaId` (no se puede
+  // reasignar la config a otra área) — si viaja, la API responde 400
+  // "should not exist" por el whitelist estricto del ValidationPipe.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { protectedAreaId: _protectedAreaId, ...rest } = payload;
+
+  return apiPatch<ChatbotConfig>(`/chatbot-configs/${id}`, rest);
 }

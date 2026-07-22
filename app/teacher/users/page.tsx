@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { parseAsInteger, parseAsString, useQueryState } from "nuqs";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@heroui/react";
-import { Search, SquarePen, Users as UsersIcon } from "lucide-react";
+import { buttonVariants } from "@heroui/styles";
+import { Search, SquarePen, TrendingUp, Users as UsersIcon } from "lucide-react";
 import { useLanguageStore } from "@/store/language-store";
 import { DataTable } from "@/components/ui/data-table";
 import { SortableHeader } from "@/components/ui/sortable-header";
@@ -128,6 +130,15 @@ export default function TeacherUsersPage() {
       header: "",
       cell: ({ row }) => (
         <div className="flex items-center justify-end gap-2">
+          {row.original.role === "STUDENT" && (
+            <Link
+              href={`/teacher/users/${row.original.id}/progress`}
+              aria-label={language === "en" ? "View progress" : "Ver progreso"}
+              className={`${buttonVariants({ variant: "outline", size: "sm" })} !inline-flex !items-center`}
+            >
+              <TrendingUp className="h-4 w-4" aria-hidden="true" />
+            </Link>
+          )}
           <EditUserModal
             user={row.original}
             trigger={

@@ -7,7 +7,7 @@ import { PromptExampleTip } from "@/components/ui/prompt-example-tip";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { TextField } from "@/components/ui/text-field";
 import { ToggleField } from "@/components/ui/toggle-field";
-import { plainTextToRichText } from "@/lib/utils/rich-text";
+import { plainTextToRichText, stripHtmlToText } from "@/lib/utils/rich-text";
 import { ProviderModelField } from "@/features/ai-providers/components/provider-model-field";
 import { useLanguageStore } from "@/store/language-store";
 import {
@@ -17,41 +17,59 @@ import {
 
 interface SpeakingPracticeFormProps {
   protectedAreaId: string;
+  /** Nombre + descripción del área, para armar el ejemplo de prompt sugerido
+   * con datos reales en vez de una referencia genérica. */
+  area: { name: string; description: string };
   defaultValues?: SpeakingPracticeFormValues;
   isSubmitting: boolean;
   submitLabel: string;
   onSubmit: (values: SpeakingPracticeFormValues) => void;
 }
 
-const PROMPT_EXAMPLE_EN = `You are an English-speaking evaluator for ecotourism guides.
-The student will describe out loud, for 1-2 minutes, a topic related to this protected area (its flora, fauna, trails, or conservation).
+function buildPromptExample(
+  area: { name: string; description: string },
+  language: "en" | "es",
+): string {
+  const description = stripHtmlToText(area.description);
+
+  if (language === "en") {
+    return `You are an English-speaking evaluator for ecotourism guides.
+The student will describe out loud, for 1-2 minutes, a topic related to ${area.name} (its flora, fauna, trails, or conservation).
+
+About this place: ${description}
 
 Evaluate: pronunciation, fluency, vocabulary related to the area, and grammar.
 Give constructive feedback in clear, encouraging language: 2 strengths, 1-2 areas to improve, and a score from 1 to 10.`;
+  }
 
-const PROMPT_EXAMPLE_ES = `Eres un evaluador de speaking en inglés para guías de ecoturismo.
-El estudiante describirá en voz alta, durante 1-2 minutos, un tema relacionado a esta área protegida (su flora, fauna, senderos o conservación).
+  return `Eres un evaluador de speaking en inglés para guías de ecoturismo.
+El estudiante describirá en voz alta, durante 1-2 minutos, un tema relacionado a ${area.name} (su flora, fauna, senderos o conservación).
+
+Sobre este lugar: ${description}
 
 Evalúa: pronunciación, fluidez, vocabulario relacionado al área y gramática.
 Da retroalimentación constructiva y alentadora: 2 fortalezas, 1-2 áreas de mejora, y una calificación del 1 al 10.`;
+}
 
 /**
  * Formulario de la práctica de speaking del área (1:1, ver
- * SpeakingPracticesService en la API). El contexto del área protegida se
- * muestra aparte (ProtectedAreaContextBanner, en la página) — aquí el
- * docente solo agrega las indicaciones para el estudiante, elige el
- * proveedor/modelo de IA y escribe el prompt que evaluará el audio y dará
- * retroalimentación.
+ * SpeakingPracticesService en la API) — el docente agrega las indicaciones
+ * para el estudiante, elige el proveedor/modelo de IA y escribe el prompt
+ * que evaluará el audio y dará retroalimentación. El nombre/descripción del
+ * área ya viaja automáticamente en el prompt real que recibe la IA (ver
+ * buildAreaContext en la API) — el ejemplo sugerido aquí solo ayuda al
+ * docente a escribir un buen prompt de evaluación, usando esos mismos datos.
  */
 export function SpeakingPracticeForm({
   protectedAreaId,
+  area,
   defaultValues,
   isSubmitting,
   submitLabel,
   onSubmit,
 }: SpeakingPracticeFormProps) {
   const language = useLanguageStore((state) => state.language);
-  const promptExample = language === "en" ? PROMPT_EXAMPLE_EN : PROMPT_EXAMPLE_ES;
+  const promptExample = buildPromptExample(area, language);
 
   const {
     control,
