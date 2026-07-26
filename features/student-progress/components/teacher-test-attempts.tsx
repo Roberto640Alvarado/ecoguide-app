@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { Spinner } from "@heroui/react";
 import { CheckCircle2, ChevronDown, XCircle } from "lucide-react";
 import { useLanguageStore } from "@/store/language-store";
@@ -46,20 +47,36 @@ export function TeacherTestAttempts({
 
   return (
     <ul className="flex flex-col gap-2">
-      {items.map((attempt) => {
+      {items.map((attempt, index) => {
         const isExpanded = expandedId === attempt.id;
 
         return (
-          <li
+          <motion.li
             key={attempt.id}
-            className="rounded-xl border border-border bg-surface"
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.25, delay: Math.min(index, 8) * 0.04 }}
+            className="overflow-hidden rounded-xl border border-border bg-surface"
           >
             <button
               type="button"
               onClick={() => setExpandedId(isExpanded ? null : attempt.id)}
-              className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
+              className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-layer-hover"
             >
-              <span className="text-sm text-foreground">
+              <span className="flex items-center gap-2 text-sm text-foreground">
+                <span
+                  className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${
+                    attempt.passed
+                      ? "bg-success-soft text-success-soft-foreground"
+                      : "bg-danger-soft text-danger-soft-foreground"
+                  }`}
+                >
+                  {attempt.passed ? (
+                    <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
+                  ) : (
+                    <XCircle className="h-3.5 w-3.5" aria-hidden="true" />
+                  )}
+                </span>
                 {en ? "Attempt" : "Intento"} {attempt.attempt}
               </span>
               <div className="flex shrink-0 items-center gap-2">
@@ -78,52 +95,68 @@ export function TeacherTestAttempts({
                 />
               </div>
             </button>
-            {isExpanded && (
-              <ul className="flex flex-col gap-2 border-t border-border px-4 py-3">
-                {attempt.answers.map((answer) => (
-                  <li
-                    key={answer.questionId}
-                    className={`rounded-lg border p-3 text-sm ${
-                      answer.isCorrect
-                        ? "border-success/30 bg-success-soft/20"
-                        : "border-danger/30 bg-danger-soft/20"
-                    }`}
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <p className="font-medium text-foreground">
-                        {answer.question}
-                      </p>
-                      {answer.isCorrect ? (
-                        <CheckCircle2
-                          className="h-4 w-4 shrink-0 text-success"
-                          aria-hidden="true"
-                        />
-                      ) : (
-                        <XCircle
-                          className="h-4 w-4 shrink-0 text-danger"
-                          aria-hidden="true"
-                        />
-                      )}
-                    </div>
-                    <p className="mt-1 text-xs text-muted">
-                      {en ? "Answered" : "Respondió"}:{" "}
-                      <span className="text-foreground">
-                        {answer.studentAnswer}
-                      </span>
-                    </p>
-                    {!answer.isCorrect && (
-                      <p className="text-xs text-muted">
-                        {en ? "Correct answer" : "Respuesta correcta"}:{" "}
-                        <span className="text-foreground">
-                          {answer.correctAnswer}
-                        </span>
-                      </p>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </li>
+            <AnimatePresence initial={false}>
+              {isExpanded && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.2, ease: "easeInOut" }}
+                  className="overflow-hidden"
+                >
+                  <ul className="flex flex-col gap-2 border-t border-border px-4 py-3">
+                    {attempt.answers.map((answer, answerIndex) => (
+                      <motion.li
+                        key={answer.questionId}
+                        initial={{ opacity: 0, y: 4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{
+                          duration: 0.2,
+                          delay: Math.min(answerIndex, 10) * 0.03,
+                        }}
+                        className={`rounded-lg border p-3 text-sm ${
+                          answer.isCorrect
+                            ? "border-success/30 bg-success-soft/20"
+                            : "border-danger/30 bg-danger-soft/20"
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <p className="font-medium text-foreground">
+                            {answer.question}
+                          </p>
+                          {answer.isCorrect ? (
+                            <CheckCircle2
+                              className="h-4 w-4 shrink-0 text-success"
+                              aria-hidden="true"
+                            />
+                          ) : (
+                            <XCircle
+                              className="h-4 w-4 shrink-0 text-danger"
+                              aria-hidden="true"
+                            />
+                          )}
+                        </div>
+                        <p className="mt-1 text-xs text-muted">
+                          {en ? "Answered" : "Respondió"}:{" "}
+                          <span className="text-foreground">
+                            {answer.studentAnswer}
+                          </span>
+                        </p>
+                        {!answer.isCorrect && (
+                          <p className="text-xs text-muted">
+                            {en ? "Correct answer" : "Respuesta correcta"}:{" "}
+                            <span className="text-foreground">
+                              {answer.correctAnswer}
+                            </span>
+                          </p>
+                        )}
+                      </motion.li>
+                    ))}
+                  </ul>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.li>
         );
       })}
     </ul>

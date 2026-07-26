@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { motion, AnimatePresence } from "framer-motion";
 import { Button, Spinner } from "@heroui/react";
 import { LogIn, Mail } from "lucide-react";
 import { useLanguageStore } from "@/store/language-store";
@@ -11,6 +10,7 @@ import { authContent } from "@/lib/i18n/auth-content";
 import { useLogin } from "@/features/auth/hooks/use-login";
 import { PasswordField } from "@/features/auth/components/password-field";
 import { TextField } from "@/components/ui/text-field";
+import { FormErrorBanner } from "@/components/ui/form-error-banner";
 import {
   loginSchema,
   type LoginFormValues,
@@ -49,18 +49,7 @@ export default function LoginPage() {
         </div>
       </div>
 
-      <AnimatePresence>
-        {errorMessage && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="overflow-hidden rounded-xl bg-danger-soft px-4 py-3 text-sm text-danger-soft-foreground"
-          >
-            {errorMessage}
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <FormErrorBanner message={errorMessage} />
 
       <form
         onSubmit={handleSubmit(onSubmit)}

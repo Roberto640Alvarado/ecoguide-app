@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, Loader2, Send } from "lucide-react";
 import { StepProgress } from "@/components/ui/step-progress";
 import { useLanguageStore } from "@/store/language-store";
+import { useTranslatedTexts } from "@/features/translation/hooks/use-translated-texts";
 import type { StudentQuestion } from "../types/student-test.types";
 
 interface TestTakerProps {
@@ -32,6 +33,14 @@ export function TestTaker({ questions, isSubmitting, onSubmit }: TestTakerProps)
   const isLast = currentIndex === questions.length - 1;
   const answeredCount = Object.keys(answers).length;
   const allAnswered = answeredCount === questions.length;
+
+  // El estado de respuestas y el envío al backend siempre usan el texto
+  // ORIGINAL de las opciones (correctAnswer se valida server-side contra
+  // ese texto) — solo lo que se muestra en pantalla pasa por la traducción.
+  const [translatedQuestion, ...translatedOptions] = useTranslatedTexts([
+    currentQuestion.question,
+    ...currentQuestion.options,
+  ]);
 
   function handleSelect(option: string) {
     setAnswers((prev) => ({ ...prev, [currentQuestion.id]: option }));
@@ -63,12 +72,13 @@ export function TestTaker({ questions, isSubmitting, onSubmit }: TestTakerProps)
         className="flex flex-col gap-4 rounded-2xl border border-border bg-surface p-5 sm:p-6"
       >
         <p className="text-sm font-semibold text-foreground sm:text-base">
-          {currentQuestion.question}
+          {translatedQuestion}
         </p>
 
         <div className="flex flex-col gap-2">
-          {currentQuestion.options.map((option) => {
+          {currentQuestion.options.map((option, index) => {
             const isSelected = answers[currentQuestion.id] === option;
+            const displayOption = translatedOptions[index] ?? option;
 
             return (
               <button
@@ -81,7 +91,7 @@ export function TestTaker({ questions, isSubmitting, onSubmit }: TestTakerProps)
                     : "border-border bg-surface hover:border-accent"
                 }`}
               >
-                {option}
+                {displayOption}
               </button>
             );
           })}

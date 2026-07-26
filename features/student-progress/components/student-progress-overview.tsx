@@ -5,6 +5,7 @@ import { TrendingUp } from "lucide-react";
 import { useLanguageStore } from "@/store/language-store";
 import { useStudentProgressOverview } from "../hooks/use-student-progress-overview";
 import { StudentProgressAreaCard } from "./student-progress-area-card";
+import { BadgeUnlockWatcher } from "./badge-unlock-watcher";
 
 /**
  * Lista completa del avance del estudiante en cada área protegida publicada
@@ -40,14 +41,19 @@ export function StudentProgressOverview() {
   }
 
   return (
-    <div className="grid gap-4 lg:grid-cols-2">
-      {items.map((progress, index) => (
-        <StudentProgressAreaCard
-          key={progress.protectedAreaId}
-          progress={progress}
-          index={index}
-        />
-      ))}
-    </div>
+    <>
+      <BadgeUnlockWatcher
+        protectedAreaIds={items.map((item) => item.protectedAreaId)}
+      />
+      <div className="grid gap-4 lg:grid-cols-2">
+        {items.map((progress, index) => (
+          <StudentProgressAreaCard
+            key={progress.protectedAreaId}
+            progress={progress}
+            index={index}
+          />
+        ))}
+      </div>
+    </>
   );
 }

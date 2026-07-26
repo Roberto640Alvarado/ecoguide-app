@@ -1,7 +1,6 @@
-import { apiGet, apiPost } from "@/lib/api/client";
+import { apiGet, apiPatch, apiPost } from "@/lib/api/client";
 import type { PaginatedResult } from "@/types/api";
 import type {
-  CreateSpeakingResultPayload,
   FindSpeakingResultsParams,
   SpeakingResult,
 } from "../types/speaking-result.types";
@@ -16,7 +15,11 @@ export function fetchSpeakingResultsByArea(
   );
 }
 
-/** Uso del docente: intentos de speaking de un estudiante específico. */
+export function fetchSpeakingResult(id: string) {
+  return apiGet<SpeakingResult>(`/speaking-results/${id}`);
+}
+
+/** Uso del docente: llamadas de speaking de un estudiante específico. */
 export function fetchSpeakingResultsForStudent(
   studentId: string,
   protectedAreaId: string,
@@ -28,22 +31,30 @@ export function fetchSpeakingResultsForStudent(
   );
 }
 
-export function createSpeakingResult(payload: CreateSpeakingResultPayload) {
-  return apiPost<SpeakingResult>("/speaking-results", payload);
+/** Uso del docente: turnos completos de una llamada de speaking. */
+export function fetchSpeakingResultForTeacher(id: string) {
+  return apiGet<SpeakingResult>(`/speaking-results/teacher/${id}`);
+}
+
+export function startSpeakingResult(protectedAreaId: string) {
+  return apiPost<SpeakingResult>("/speaking-results", { protectedAreaId });
 }
 
 /**
- * Sube el audio grabado por el estudiante vía el endpoint genérico
- * /upload-files/audio y devuelve su URL. Ver ImageUploader para el porqué de
- * anular Content-Type: apiClient lo fija en application/json por defecto, lo
- * que le impediría a Axios armar el multipart/form-data correcto.
+ * Envía el audio del turno del estudiante. anular Content-Type: apiClient lo
+ * fija en application/json por defecto, lo que le impediría a Axios armar el
+ * multipart/form-data correcto (mismo patrón que el viejo
+ * uploadSpeakingAudio, ver ImageUploader).
  */
-export function uploadSpeakingAudio(blob: Blob) {
+export function sendSpeakingTurn(id: string, audioBlob: Blob) {
   const formData = new FormData();
-  formData.append("file", blob, "speaking-practice.webm");
+  formData.append("audio", audioBlob, "turn.webm");
 
-  return apiPost<{ url: string }>("/upload-files/audio", formData, {
-    params: { folder: "speaking-results" },
+  return apiPost<SpeakingResult>(`/speaking-results/${id}/turns`, formData, {
     headers: { "Content-Type": undefined },
   });
+}
+
+export function finishSpeakingResult(id: string) {
+  return apiPatch<SpeakingResult>(`/speaking-results/${id}/finish`, {});
 }

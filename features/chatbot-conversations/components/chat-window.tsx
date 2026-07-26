@@ -5,6 +5,7 @@ import { Button, Spinner, toast } from "@heroui/react";
 import { CheckCheck, Flag, Send, Sparkles } from "lucide-react";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useLanguageStore } from "@/store/language-store";
+import { useTranslatedText } from "@/features/translation/hooks/use-translated-texts";
 import { useSendMessage } from "../hooks/use-send-message";
 import { useFinishConversation } from "../hooks/use-finish-conversation";
 import { ChatMessageBubble } from "./chat-message-bubble";
@@ -38,6 +39,7 @@ export function ChatWindow({
   const bottomRef = useRef<HTMLDivElement>(null);
 
   const isFinished = !!conversation.endedAt;
+  const translatedFeedback = useTranslatedText(conversation.feedback ?? "");
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -149,7 +151,7 @@ export function ChatWindow({
               {language === "en" ? "Overall feedback" : "Retroalimentación general"}
             </div>
             <p className="text-sm leading-relaxed text-foreground">
-              {conversation.feedback}
+              {translatedFeedback}
             </p>
           </div>
         )}

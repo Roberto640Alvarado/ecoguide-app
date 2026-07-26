@@ -6,6 +6,7 @@ export interface FlashCardsProgress {
 export interface SpeakingProgress {
   available: boolean;
   attempts: number;
+  finished: number;
   bestScore: number | null;
 }
 

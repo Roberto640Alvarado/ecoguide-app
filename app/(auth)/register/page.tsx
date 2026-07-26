@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { motion, AnimatePresence } from "framer-motion";
 import { Button, Spinner } from "@heroui/react";
 import { Mail, User, UserPlus } from "lucide-react";
 import { useLanguageStore } from "@/store/language-store";
@@ -12,6 +11,7 @@ import { useRegister } from "@/features/auth/hooks/use-register";
 import { PasswordField } from "@/features/auth/components/password-field";
 import { AvatarPicker } from "@/features/auth/components/avatar-picker";
 import { TextField } from "@/components/ui/text-field";
+import { FormErrorBanner } from "@/components/ui/form-error-banner";
 import {
   registerSchema,
   type RegisterFormValues,
@@ -57,18 +57,7 @@ export default function RegisterPage() {
         </div>
       </div>
 
-      <AnimatePresence>
-        {errorMessage && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="overflow-hidden rounded-xl bg-danger-soft px-4 py-3 text-sm text-danger-soft-foreground"
-          >
-            {errorMessage}
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <FormErrorBanner message={errorMessage} />
 
       <form
         onSubmit={handleSubmit(onSubmit)}

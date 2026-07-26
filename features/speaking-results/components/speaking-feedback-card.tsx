@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { Sparkles, Volume2, VolumeX } from "lucide-react";
+import { MessagesSquare, Sparkles } from "lucide-react";
 import { useLanguageStore } from "@/store/language-store";
-import { useSpeechSynthesis } from "../hooks/use-speech-synthesis";
+import { useTranslatedText } from "@/features/translation/hooks/use-translated-texts";
 import type { SpeakingResult } from "../types/speaking-result.types";
 
 interface SpeakingFeedbackCardProps {
@@ -18,24 +17,16 @@ function scoreColorClass(score: number) {
 }
 
 /**
- * Retroalimentación de IA en texto y en voz (TTS): se lee en voz alta
- * automáticamente apenas llega (continuación directa del gesto del
- * estudiante al enviar su respuesta) y siempre queda el botón para repetirla.
+ * Resumen de la llamada ya finalizada: retroalimentación de IA en texto (sin
+ * reproducir audio acá — solo se escucha durante la llamada en vivo) más la
+ * conversación completa, siempre visible (no oculta detrás de un
+ * desplegable), para que el estudiante pueda repasar sus turnos y los de la
+ * IA.
  */
 export function SpeakingFeedbackCard({ result }: SpeakingFeedbackCardProps) {
   const language = useLanguageStore((state) => state.language);
-  const { speak, stop, isSpeaking } = useSpeechSynthesis();
-  const hasAutoSpokenRef = useRef(false);
-
-  useEffect(() => {
-    if (!hasAutoSpokenRef.current) {
-      hasAutoSpokenRef.current = true;
-      speak(result.feedback);
-    }
-
-    return () => stop();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [result.id]);
+  const en = language === "en";
+  const translatedFeedback = useTranslatedText(result.feedback ?? "");
 
   return (
     <motion.div
@@ -50,44 +41,40 @@ export function SpeakingFeedbackCard({ result }: SpeakingFeedbackCardProps) {
             <Sparkles className="h-4 w-4" aria-hidden="true" />
           </span>
           <h3 className="text-sm font-semibold text-foreground">
-            {language === "en" ? "AI feedback" : "Retroalimentación de IA"}
+            {en ? "AI feedback" : "Retroalimentación de IA"}
           </h3>
         </div>
-        <span
-          className={`shrink-0 rounded-full px-3 py-1 text-sm font-bold ${scoreColorClass(result.score)}`}
-        >
-          {result.score}/10
-        </span>
+        {result.score !== null && (
+          <span
+            className={`shrink-0 rounded-full px-3 py-1 text-sm font-bold ${scoreColorClass(result.score)}`}
+          >
+            {result.score}/10
+          </span>
+        )}
       </div>
 
-      <p className="text-sm leading-relaxed text-foreground">
-        {result.feedback}
-      </p>
+      {result.feedback && (
+        <p className="text-sm leading-relaxed text-foreground">
+          {translatedFeedback}
+        </p>
+      )}
 
-      <button
-        type="button"
-        onClick={() => (isSpeaking ? stop() : speak(result.feedback))}
-        className="flex w-fit items-center gap-1.5 text-xs font-medium text-accent hover:underline"
-      >
-        {isSpeaking ? (
-          <>
-            <VolumeX className="h-3.5 w-3.5" aria-hidden="true" />
-            {language === "en" ? "Stop" : "Detener"}
-          </>
-        ) : (
-          <>
-            <Volume2 className="h-3.5 w-3.5" aria-hidden="true" />
-            {language === "en" ? "Listen again" : "Escuchar de nuevo"}
-          </>
-        )}
-      </button>
-
-      <details className="text-xs text-muted">
-        <summary className="cursor-pointer font-medium">
-          {language === "en" ? "Your transcript" : "Tu transcripción"}
-        </summary>
-        <p className="mt-2 leading-relaxed">{result.transcription}</p>
-      </details>
+      <div className="flex flex-col gap-2 border-t border-accent/20 pt-4">
+        <div className="flex items-center gap-1.5 text-xs font-semibold text-muted">
+          <MessagesSquare className="h-3.5 w-3.5" aria-hidden="true" />
+          {en ? "Conversation" : "Conversación"}
+        </div>
+        <ul className="flex flex-col gap-2 text-xs text-muted">
+          {result.turns.map((turn) => (
+            <li key={turn.id} className="leading-relaxed">
+              <span className="font-semibold text-foreground">
+                {turn.role === "assistant" ? "EcoGuía: " : en ? "You: " : "Tú: "}
+              </span>
+              {turn.message}
+            </li>
+          ))}
+        </ul>
+      </div>
     </motion.div>
   );
 }

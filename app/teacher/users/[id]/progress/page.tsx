@@ -30,19 +30,30 @@ export default function TeacherStudentProgressPage() {
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className="flex items-center gap-3"
+        className="relative flex items-center gap-4 overflow-hidden rounded-3xl border border-border bg-[radial-gradient(circle_at_top_left,_var(--tw-gradient-stops))] from-accent-soft/50 via-surface to-surface px-5 py-5 sm:px-7 sm:py-6"
       >
-        {isLoading ? (
-          <Spinner size="sm" />
-        ) : (
-          <UserAvatar
-            name={student?.name}
-            avatarUrl={student?.avatarUrl}
-            size="md"
-          />
-        )}
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">
+        <div
+          className="pointer-events-none absolute -top-14 -left-10 h-48 w-48 rounded-full bg-accent-soft blur-3xl"
+          aria-hidden="true"
+        />
+
+        <div className="relative shrink-0">
+          <div className="absolute inset-0 -z-10 rounded-full bg-accent-soft blur-xl" aria-hidden="true" />
+          {isLoading ? (
+            <div className="flex h-14 w-14 items-center justify-center">
+              <Spinner size="sm" />
+            </div>
+          ) : (
+            <UserAvatar
+              name={student?.name}
+              avatarUrl={student?.avatarUrl}
+              size="lg"
+              className="border-4 border-surface shadow-lg"
+            />
+          )}
+        </div>
+        <div className="relative min-w-0">
+          <h1 className="truncate text-2xl font-bold text-foreground">
             {isLoading
               ? en
                 ? "Loading..."

@@ -12,6 +12,7 @@ import { useProtectedAreas } from "@/features/protected-areas/hooks/use-protecte
 import { useStudentProgressOverview } from "@/features/student-progress/hooks/use-student-progress-overview";
 import type { StudentAreaProgress } from "@/features/student-progress/types/student-progress.types";
 import { stripHtmlToText } from "@/lib/utils/rich-text";
+import { useTranslatedTexts } from "@/features/translation/hooks/use-translated-texts";
 
 const ProtectedAreasMap = dynamic(
   () =>
@@ -178,6 +179,10 @@ function AreaCard({ area, progress, index, variant }: AreaCardProps) {
   const progressPercent = progress?.progressPercent ?? 0;
   const stepsCompleted = progress?.stepsCompleted ?? 0;
   const stepsTotal = progress?.stepsTotal ?? 0;
+  const [translatedName, translatedDescription] = useTranslatedTexts([
+    area.name,
+    stripHtmlToText(area.description),
+  ]);
 
   return (
     <motion.div
@@ -217,10 +222,10 @@ function AreaCard({ area, progress, index, variant }: AreaCardProps) {
 
           <div className="absolute inset-x-0 top-0 bg-gradient-to-b from-black/70 via-black/30 to-transparent p-4">
             <h3 className="line-clamp-1 font-semibold text-white">
-              {area.name}
+              {translatedName}
             </h3>
             <p className="mt-1 line-clamp-2 text-sm text-white/85">
-              {stripHtmlToText(area.description)}
+              {translatedDescription}
             </p>
           </div>
         </div>

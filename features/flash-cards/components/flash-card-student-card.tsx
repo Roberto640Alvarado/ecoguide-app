@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { richTextDisplayClassName, sanitizeRichText } from "@/lib/utils/rich-text";
+import { useTranslatedTexts } from "@/features/translation/hooks/use-translated-texts";
 import { FlashCardAvatar } from "./flash-card-avatar";
 import { FlashCardTypeBadge } from "./flash-card-type-badge";
 import { FlashCardQuiz } from "./flash-card-quiz";
@@ -23,6 +24,10 @@ interface FlashCardStudentCardProps {
 export function FlashCardStudentCard({ card }: FlashCardStudentCardProps) {
   const theme = FLASH_CARD_TYPE_TONE[card.type];
   const isEnvironmental = card.type === "ENVIRONMENTAL";
+  const [translatedTitle, translatedContent] = useTranslatedTexts([
+    card.title,
+    card.content,
+  ]);
 
   return (
     <div
@@ -58,7 +63,7 @@ export function FlashCardStudentCard({ card }: FlashCardStudentCardProps) {
           />
 
           <h2 className="text-lg font-bold text-foreground sm:text-xl">
-            {card.title}
+            {translatedTitle}
           </h2>
 
           <div className="mt-3">
@@ -67,7 +72,7 @@ export function FlashCardStudentCard({ card }: FlashCardStudentCardProps) {
             ) : (
               <div
                 className={`text-sm leading-relaxed text-muted sm:text-base ${richTextDisplayClassName}`}
-                dangerouslySetInnerHTML={{ __html: sanitizeRichText(card.content) }}
+                dangerouslySetInnerHTML={{ __html: sanitizeRichText(translatedContent) }}
               />
             )}
           </div>

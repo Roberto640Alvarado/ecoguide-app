@@ -12,6 +12,7 @@ export const AI_PROVIDER_TYPES = [
   "OPENAI",
   "MISTRAL",
   "DEEPSEEK",
+  "GROQ",
 ] as const;
 
 export type AIProviderType = (typeof AI_PROVIDER_TYPES)[number];
@@ -22,6 +23,7 @@ export const AI_PROVIDER_TYPE_LABELS: Record<AIProviderType, string> = {
   OPENAI: "OpenAI",
   MISTRAL: "Mistral",
   DEEPSEEK: "DeepSeek",
+  GROQ: "Groq",
 };
 
 export interface AIProvider {

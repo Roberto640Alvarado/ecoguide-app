@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import { Award, Check, PartyPopper, RotateCcw, X } from "lucide-react";
 import { Button } from "@heroui/react";
 import { useLanguageStore } from "@/store/language-store";
+import { useTranslatedTexts } from "@/features/translation/hooks/use-translated-texts";
 import type {
   AnswerResult,
   StudentQuestion,
@@ -58,6 +59,10 @@ interface ResultRowProps {
  */
 function ResultRow({ question, answer, index }: ResultRowProps) {
   const language = useLanguageStore((state) => state.language);
+  const [translatedQuestion, translatedAnswer] = useTranslatedTexts([
+    question.question,
+    answer.studentAnswer,
+  ]);
 
   useEffect(() => {
     if (answer.isCorrect) {
@@ -97,10 +102,10 @@ function ResultRow({ question, answer, index }: ResultRowProps) {
         )}
       </span>
       <div className="flex flex-col gap-0.5">
-        <p className="text-sm font-medium text-foreground">{question.question}</p>
+        <p className="text-sm font-medium text-foreground">{translatedQuestion}</p>
         <p className="text-xs text-muted">
           {language === "en" ? "Your answer: " : "Tu respuesta: "}
-          {answer.studentAnswer || (language === "en" ? "(empty)" : "(vacío)")}
+          {translatedAnswer || (language === "en" ? "(empty)" : "(vacío)")}
         </p>
       </div>
     </motion.div>

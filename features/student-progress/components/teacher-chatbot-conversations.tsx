@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { es, enUS } from "date-fns/locale";
+import { AnimatePresence, motion } from "framer-motion";
 import { Spinner } from "@heroui/react";
 import { Bot, ChevronDown, User } from "lucide-react";
 import { useLanguageStore } from "@/store/language-store";
@@ -51,23 +52,28 @@ export function TeacherChatbotConversations({
 
   return (
     <ul className="flex flex-col gap-2">
-      {items.map((conversation) => {
+      {items.map((conversation, index) => {
         const isExpanded = expandedId === conversation.id;
 
         return (
-          <li
+          <motion.li
             key={conversation.id}
-            className="rounded-xl border border-border bg-surface"
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.25, delay: Math.min(index, 8) * 0.04 }}
+            className="overflow-hidden rounded-xl border border-border bg-surface"
           >
             <button
               type="button"
               onClick={() =>
                 setExpandedId(isExpanded ? null : conversation.id)
               }
-              className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
+              className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-layer-hover"
             >
               <span className="flex items-center gap-2 text-sm text-foreground">
-                <Bot className="h-4 w-4 shrink-0 text-muted" aria-hidden="true" />
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-accent-soft text-accent-soft-foreground">
+                  <Bot className="h-3.5 w-3.5" aria-hidden="true" />
+                </span>
                 {formatDistanceToNow(new Date(conversation.startedAt), {
                   addSuffix: true,
                   locale: language === "en" ? enUS : es,
@@ -89,50 +95,60 @@ export function TeacherChatbotConversations({
                 />
               </div>
             </button>
-            {isExpanded && (
-              <div className="flex flex-col gap-2 border-t border-border px-4 py-3">
-                {isLoadingDetail ? (
-                  <div className="flex justify-center py-4">
-                    <Spinner size="sm" />
-                  </div>
-                ) : (
-                  <>
-                    <div className="flex max-h-72 flex-col gap-2 overflow-y-auto">
-                      {detail?.messages.map((message) => (
-                        <div
-                          key={message.id}
-                          className={`flex items-start gap-2 text-sm ${
-                            message.role === "assistant"
-                              ? ""
-                              : "flex-row-reverse text-right"
-                          }`}
-                        >
-                          <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-default-soft text-muted">
-                            {message.role === "assistant" ? (
-                              <Bot className="h-3.5 w-3.5" aria-hidden="true" />
-                            ) : (
-                              <User className="h-3.5 w-3.5" aria-hidden="true" />
-                            )}
-                          </span>
-                          <p className="min-w-0 rounded-xl bg-surface-secondary/60 px-3 py-2 text-foreground">
-                            {message.message}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                    {detail?.feedback && (
-                      <div className="rounded-xl bg-accent-soft/50 p-3 text-sm">
-                        <p className="text-xs font-semibold text-accent-soft-foreground">
-                          {en ? "General feedback" : "Retroalimentación general"}
-                        </p>
-                        <p className="text-foreground">{detail.feedback}</p>
+            <AnimatePresence initial={false}>
+              {isExpanded && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.2, ease: "easeInOut" }}
+                  className="overflow-hidden"
+                >
+                  <div className="flex flex-col gap-2 border-t border-border px-4 py-3">
+                    {isLoadingDetail ? (
+                      <div className="flex justify-center py-4">
+                        <Spinner size="sm" />
                       </div>
+                    ) : (
+                      <>
+                        <div className="flex max-h-72 flex-col gap-2 overflow-y-auto">
+                          {detail?.messages.map((message) => (
+                            <div
+                              key={message.id}
+                              className={`flex items-start gap-2 text-sm ${
+                                message.role === "assistant"
+                                  ? ""
+                                  : "flex-row-reverse text-right"
+                              }`}
+                            >
+                              <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-default-soft text-muted">
+                                {message.role === "assistant" ? (
+                                  <Bot className="h-3.5 w-3.5" aria-hidden="true" />
+                                ) : (
+                                  <User className="h-3.5 w-3.5" aria-hidden="true" />
+                                )}
+                              </span>
+                              <p className="min-w-0 rounded-xl bg-surface-secondary/60 px-3 py-2 text-foreground">
+                                {message.message}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                        {detail?.feedback && (
+                          <div className="rounded-xl bg-accent-soft/50 p-3 text-sm">
+                            <p className="text-xs font-semibold text-accent-soft-foreground">
+                              {en ? "General feedback" : "Retroalimentación general"}
+                            </p>
+                            <p className="text-foreground">{detail.feedback}</p>
+                          </div>
+                        )}
+                      </>
                     )}
-                  </>
-                )}
-              </div>
-            )}
-          </li>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.li>
         );
       })}
     </ul>

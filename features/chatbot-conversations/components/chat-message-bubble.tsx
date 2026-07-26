@@ -1,5 +1,6 @@
 import { Bot } from "lucide-react";
 import { UserAvatar } from "@/components/ui/user-avatar";
+import { useTranslatedText } from "@/features/translation/hooks/use-translated-texts";
 import type { ChatMessage } from "../types/chatbot-conversation.types";
 
 interface ChatMessageBubbleProps {
@@ -19,6 +20,9 @@ export function ChatMessageBubble({
   studentAvatarUrl,
 }: ChatMessageBubbleProps) {
   const isUser = message.role === "user";
+  // Solo se traduce lo que dice el bot — lo que escribió el estudiante se
+  // muestra tal cual, es su propio texto.
+  const translatedMessage = useTranslatedText(isUser ? "" : message.message);
 
   return (
     <div className={`flex items-end gap-2 ${isUser ? "flex-row-reverse" : ""}`}>
@@ -43,7 +47,7 @@ export function ChatMessageBubble({
               : "rounded-bl-sm bg-surface-secondary text-foreground"
           }`}
         >
-          {message.message}
+          {isUser ? message.message : translatedMessage}
         </div>
       </div>
     </div>

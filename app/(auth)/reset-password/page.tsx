@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Button, Spinner } from "@heroui/react";
 import { CheckCircle2 } from "lucide-react";
 import { useLanguageStore } from "@/store/language-store";
@@ -12,6 +12,7 @@ import { authContent } from "@/lib/i18n/auth-content";
 import { useResetPassword } from "@/features/auth/hooks/use-reset-password";
 import { PasswordField } from "@/features/auth/components/password-field";
 import { PinCodeInput } from "@/components/ui/pin-code-input";
+import { FormErrorBanner } from "@/components/ui/form-error-banner";
 import {
   resetPasswordSchema,
   type ResetPasswordFormValues,
@@ -65,18 +66,7 @@ export default function ResetPasswordPage() {
         <p className="text-sm text-muted">{t.subtitle}</p>
       </div>
 
-      <AnimatePresence>
-        {errorMessage && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="overflow-hidden rounded-xl bg-danger-soft px-4 py-3 text-sm text-danger-soft-foreground"
-          >
-            {errorMessage}
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <FormErrorBanner message={errorMessage} />
 
       <form
         onSubmit={handleSubmit(onSubmit)}
