@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import confetti from "canvas-confetti";
 import { motion } from "framer-motion";
@@ -8,6 +8,9 @@ import { Award, Check, PartyPopper, RotateCcw, X } from "lucide-react";
 import { Button } from "@heroui/react";
 import { useLanguageStore } from "@/store/language-store";
 import { useTranslatedTexts } from "@/features/translation/hooks/use-translated-texts";
+import { useCheckAreaBadges } from "@/features/student-progress/hooks/use-check-area-badges";
+import { BadgeUnlockDialog } from "@/features/badges/components/badge-unlock-dialog";
+import type { Badge } from "@/features/badges/types/badge.types";
 import type {
   AnswerResult,
   StudentQuestion,
@@ -18,6 +21,7 @@ interface TestResultsProps {
   questions: StudentQuestion[];
   result: StudentTestResult;
   maxAttempts: number;
+  protectedAreaId: string;
   onRetry: () => void;
   tourHref: string;
 }
@@ -124,13 +128,19 @@ export function TestResults({
   questions,
   result,
   maxAttempts,
+  protectedAreaId,
   onRetry,
   tourHref,
 }: TestResultsProps) {
   const language = useLanguageStore((state) => state.language);
+  const en = language === "en";
   const [revealedCount, setRevealedCount] = useState(0);
   const showGrade = revealedCount >= questions.length;
   const attemptsRemaining = Math.max(0, maxAttempts - result.attempt);
+
+  const { mutate: checkAreaBadges } = useCheckAreaBadges();
+  const [justUnlocked, setJustUnlocked] = useState<Badge[]>([]);
+  const hasCheckedBadgesRef = useRef(false);
 
   useEffect(() => {
     if (revealedCount >= questions.length) return;
@@ -151,8 +161,32 @@ export function TestResults({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showGrade]);
 
+  useEffect(() => {
+    // Aprobar el examen puede ser el último paso pendiente del recorrido —
+    // se revisa (y, si corresponde, se otorga) la insignia del área de una
+    // vez acá, sin esperar a que el estudiante vuelva a la vista de
+    // recorrido. checkAndAwardBadges ya valida TODOS los pasos del área, así
+    // que si todavía falta alguno simplemente no desbloquea nada.
+    if (!showGrade || !result.passed || hasCheckedBadgesRef.current) return;
+    hasCheckedBadgesRef.current = true;
+
+    checkAreaBadges(protectedAreaId, {
+      onSuccess: (award) => {
+        if (award.justUnlocked.length > 0) {
+          setJustUnlocked(award.justUnlocked);
+        }
+      },
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showGrade, result.passed, protectedAreaId]);
+
   return (
     <div className="flex flex-col gap-4">
+      <BadgeUnlockDialog
+        badge={justUnlocked[0] ?? null}
+        onClose={() => setJustUnlocked((prev) => prev.slice(1))}
+      />
+
       <div className="flex flex-col gap-2">
         {questions.slice(0, revealedCount).map((question, index) => {
           const answer = result.answers.find(
@@ -210,46 +244,68 @@ export function TestResults({
           <div>
             <h3 className="text-lg font-bold text-foreground">
               {result.passed
-                ? language === "en"
+                ? en
                   ? "You passed!"
-                  : "¡Lo lograste!"
-                : language === "en"
-                  ? "Keep practicing"
-                  : "Sigue practicando"}
+                  : "¡Aprobaste!"
+                : attemptsRemaining === 0
+                  ? en
+                    ? "Out of attempts"
+                    : "Se acabaron tus intentos"
+                  : en
+                    ? "Keep practicing"
+                    : "Sigue practicando"}
             </h3>
             <p className="text-sm text-muted">
-              {language === "en"
+              {en
                 ? `Score: ${result.score} (passing: ${result.passingScore})`
                 : `Puntaje: ${result.score} (mínimo: ${result.passingScore})`}
             </p>
           </div>
 
           <p className="text-xs text-muted">
-            {language === "en"
+            {en
               ? `Attempt ${result.attempt} of ${maxAttempts}`
               : `Intento ${result.attempt} de ${maxAttempts}`}
           </p>
 
+          {result.passed && (
+            <p className="text-xs text-muted">
+              {attemptsRemaining > 0
+                ? en
+                  ? "You can keep trying if you want to improve your score."
+                  : "Puedes seguir intentando si quieres mejorar tu nota."
+                : en
+                  ? "That's your final grade for this test."
+                  : "Esa fue tu nota final para este examen."}
+            </p>
+          )}
+
           <div className="flex flex-wrap justify-center gap-2 pt-1">
-            {!result.passed && attemptsRemaining > 0 && (
+            {attemptsRemaining > 0 && (
               <Button variant="primary" onPress={onRetry} className="gap-1.5">
                 <RotateCcw className="h-4 w-4" aria-hidden="true" />
-                {language === "en" ? "Try again" : "Intentar de nuevo"}
+                {result.passed
+                  ? en
+                    ? "Try to improve"
+                    : "Intentar mejorar"
+                  : en
+                    ? "Try again"
+                    : "Intentar de nuevo"}
               </Button>
             )}
             <Link
               href={tourHref}
               className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-layer-hover"
             >
-              {language === "en" ? "Back to tour" : "Volver al recorrido"}
+              {en ? "Back to tour" : "Volver al recorrido"}
             </Link>
           </div>
 
           {!result.passed && attemptsRemaining === 0 && (
             <p className="text-xs text-danger">
-              {language === "en"
-                ? "You've used all your attempts for this test."
-                : "Ya usaste todos tus intentos para este examen."}
+              {en
+                ? "You ran out of attempts for this test."
+                : "Se vencieron tus intentos para este examen."}
             </p>
           )}
         </motion.div>

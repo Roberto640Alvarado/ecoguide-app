@@ -117,6 +117,7 @@ export default function StudentTestPage() {
           questions={config.questions}
           result={result}
           maxAttempts={config.maxAttempts}
+          protectedAreaId={params.id}
           onRetry={() => setResult(null)}
           tourHref={tourHref}
         />
