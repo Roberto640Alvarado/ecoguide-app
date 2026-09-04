@@ -1,6 +1,7 @@
 "use client";
 
-import type { ReactNode } from "react";
+import type { ComponentProps, ReactElement, ReactNode } from "react";
+import { Pressable } from "react-aria-components";
 import {
   AlertDialogRoot,
   AlertDialogBackdrop,
@@ -17,7 +18,13 @@ import { TriangleAlert } from "lucide-react";
 import { useLanguageStore } from "@/store/language-store";
 
 interface ConfirmDialogProps {
-  trigger: ReactNode;
+  /** Elemento que abre el diálogo al hacer click. Omitir cuando el diálogo
+   *  se controla externamente con `open`/`onOpenChange` (ej. un toggle que
+   *  primero debe confirmar antes de aplicar el cambio). */
+  trigger?: ReactElement;
+  /** Controla el diálogo desde afuera en vez de depender del `trigger`. */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
   title: string;
   description: ReactNode;
   /** Nota tranquilizadora opcional (ej. "Puedes reactivarlo luego"). */
@@ -32,6 +39,8 @@ interface ConfirmDialogProps {
 
 export function ConfirmDialog({
   trigger,
+  open,
+  onOpenChange,
   title,
   description,
   note,
@@ -44,8 +53,16 @@ export function ConfirmDialog({
   const language = useLanguageStore((state) => state.language);
 
   return (
-    <AlertDialogRoot>
-      {trigger}
+    <AlertDialogRoot isOpen={open} onOpenChange={onOpenChange}>
+      {trigger && (
+        <Pressable>
+          {/* Igual que en FormModal: un <button> crudo pasado directo como
+           *  hijo nunca recibe el gesto de click de React Aria sin este
+           *  wrapper. El cast es porque Pressable exige en TS un elemento
+           *  DOM nativo, aunque en runtime clona cualquier elemento. */}
+          {trigger as unknown as ComponentProps<typeof Pressable>["children"]}
+        </Pressable>
+      )}
       <AlertDialogBackdrop variant="blur">
         <AlertDialogContainer size="sm">
           <AlertDialogDialog>

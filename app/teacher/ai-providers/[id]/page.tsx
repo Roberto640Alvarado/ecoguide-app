@@ -8,7 +8,7 @@ import { useLanguageStore } from "@/store/language-store";
 import { useAIProvider } from "@/features/ai-providers/hooks/use-ai-provider";
 import { ProviderStatusBadge } from "@/features/ai-providers/components/provider-status-badge";
 import { EditProviderModal } from "@/features/ai-providers/components/edit-provider-modal";
-import { DeactivateProviderButton } from "@/features/ai-providers/components/deactivate-provider-button";
+import { ProviderStatusToggle } from "@/features/ai-providers/components/provider-status-toggle";
 import { ModelFormModal } from "@/features/ai-providers/components/model-form-modal";
 import { RemoveModelButton } from "@/features/ai-providers/components/remove-model-button";
 
@@ -79,7 +79,7 @@ export default function AIProviderDetailPage() {
               </Button>
             }
           />
-          <DeactivateProviderButton provider={provider} />
+          <ProviderStatusToggle provider={provider} />
         </div>
       </div>
 

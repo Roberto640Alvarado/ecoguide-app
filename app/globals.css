@@ -1,18 +1,52 @@
 @import "tailwindcss";
 @import "@heroui/styles";
 @import "leaflet/dist/leaflet.css";
+@import "driver.js/dist/driver.css";
 
 /* Preline UI (solo el núcleo de hs-overlay, usado por el sidebar)
    Se importa por ruta relativa: el "exports" del paquete preline@4.2.0 no
    expone "./variants.css" como subpath válido para @import. */
 @import "../node_modules/preline/variants.css";
+
+@custom-variant dark (&:is(.dark *));
 @source "../node_modules/preline/dist/*.js";
 
+/*
+ * Paleta de marca EcoGuide (ver CLAUDE.md, sección "Sistema de Diseño"):
+ *   Ink Black #011627 · Steel Blue #6D9DC5 · Sea Green #09814A ·
+ *   Porcelain #FDFFFC · Rosy Granite #84828F
+ *
+ * Sobreescribe los tokens base que define HeroUI
+ * (@heroui/styles/dist/themes/default/variables.css) para que tanto los
+ * componentes de HeroUI (vistas aún no migradas) como los de shadcn/ui
+ * (vistas migradas) compartan una única fuente de verdad de color.
+ */
 :root,
 [data-theme="light"] {
-  /* Acento eco-verde para EcoGuide Training */
-  --accent: oklch(0.58 0.15 152);
-  --accent-foreground: oklch(0.98 0 0);
+  --background: #fdfffc; /* Porcelain */
+  --foreground: #011627; /* Ink Black */
+
+  --surface: #ffffff;
+  --surface-foreground: #011627;
+
+  --surface-secondary: color-mix(in oklab, #84828f 12%, white);
+  --surface-secondary-foreground: #011627;
+
+  --overlay: var(--surface);
+  --overlay-foreground: var(--surface-foreground);
+
+  --muted: #84828f; /* Rosy Granite */
+
+  --border: color-mix(in oklab, #84828f 18%, white);
+  --separator: color-mix(in oklab, #84828f 12%, white);
+
+  /* Acento eco-verde de marca (Sea Green) */
+  --accent: #09814a;
+  --accent-foreground: #fdfffc;
+
+  /* Steel Blue: acento informativo/secundario (ver "Sistema de Diseño") */
+  --info: #6d9dc5;
+  --info-foreground: #011627;
 
   /* HeroUI deja los campos de formulario sin borde en reposo (transparent),
      lo que los hace ver "apagados"/deshabilitados frente al ring de foco.
@@ -22,8 +56,30 @@
 
 .dark,
 [data-theme="dark"] {
-  --accent: oklch(0.68 0.14 152);
-  --accent-foreground: oklch(0.15 0 0);
+  --background: #011627; /* Ink Black */
+  --foreground: #fdfffc; /* Porcelain */
+
+  --surface: color-mix(in oklab, #011627 85%, white);
+  --surface-foreground: #fdfffc;
+
+  --surface-secondary: color-mix(in oklab, #011627 78%, white);
+  --surface-secondary-foreground: #fdfffc;
+
+  --overlay: var(--surface);
+  --overlay-foreground: var(--surface-foreground);
+
+  --muted: color-mix(in oklab, #84828f 75%, white); /* Rosy Granite aclarado */
+
+  --border: color-mix(in oklab, #011627 75%, white);
+  --separator: color-mix(in oklab, #011627 70%, white);
+
+  /* Sea Green aclarado para mantener contraste AA sobre fondo oscuro */
+  --accent: color-mix(in oklab, #09814a 65%, white);
+  --accent-foreground: #011627;
+
+  --info: color-mix(in oklab, #6d9dc5 85%, white);
+  --info-foreground: #011627;
+
   --field-border: var(--border);
 }
 
@@ -71,6 +127,31 @@
      strong-password, pin-input, copy-markup) */
   --color-muted-foreground-1: var(--muted);
   --color-primary-focus: var(--accent);
+
+  /* Acento informativo (Steel Blue), separado del primario (Sea Green) */
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+
+  /* Tokens que faltan para los componentes de shadcn/ui (button, sheet,
+     dropdown-menu, tooltip, avatar, sidebar…), mapeados a los mismos
+     tokens de HeroUI de arriba — nunca se define una paleta paralela. */
+  --color-card: var(--surface);
+  --color-card-foreground: var(--surface-foreground);
+  --color-popover: var(--overlay);
+  --color-popover-foreground: var(--overlay-foreground);
+  --color-muted-foreground: var(--muted);
+  --color-destructive: var(--danger);
+  --color-destructive-foreground: var(--danger-foreground);
+  --color-input: var(--field-border);
+  --color-ring: var(--accent);
+
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
 }
 
 html {
@@ -118,4 +199,114 @@ body {
 
 .tiptap:focus {
   outline: none;
+}
+
+/*
+ * Tokens del componente <Sidebar> de shadcn/ui (components/ui/sidebar.tsx).
+ * Se apuntan a los mismos tokens de marca de arriba en vez de a la paleta
+ * zinc por defecto que trae la CLI, para que el sidebar de shadcn se vea
+ * idéntico al resto de la app (misma fuente de verdad de color).
+ */
+:root {
+  --sidebar: var(--surface);
+  --sidebar-foreground: var(--surface-foreground);
+  --sidebar-primary: var(--accent);
+  --sidebar-primary-foreground: var(--accent-foreground);
+  --sidebar-accent: var(--surface-hover);
+  --sidebar-accent-foreground: var(--surface-foreground);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--accent);
+}
+
+.dark {
+  --sidebar: var(--surface);
+  --sidebar-foreground: var(--surface-foreground);
+  --sidebar-primary: var(--accent);
+  --sidebar-primary-foreground: var(--accent-foreground);
+  --sidebar-accent: var(--surface-hover);
+  --sidebar-accent-foreground: var(--surface-foreground);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--accent);
+}
+
+/*
+ * Tour guiado (driver.js): cada página de docente define sus propios pasos
+ * (ver hooks/use-page-tour.ts) apuntando a elementos vía `data-tour`. Este
+ * bloque retintea el popover por defecto de driver.js (driver.css, recién
+ * importado arriba) con los mismos tokens de marca del resto de la app —
+ * nunca se define una paleta paralela. La clase `.ecoguide-tour-popover` se
+ * pasa vía `popoverClass` al configurar cada tour.
+ */
+.ecoguide-tour-popover.driver-popover {
+  background-color: var(--surface);
+  color: var(--surface-foreground);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  box-shadow: 0 12px 32px rgba(1, 22, 39, 0.18);
+  font-family: var(--font-open-sans), Arial, Helvetica, sans-serif;
+}
+
+.ecoguide-tour-popover .driver-popover-title {
+  color: var(--surface-foreground);
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.ecoguide-tour-popover .driver-popover-description {
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+
+.ecoguide-tour-popover .driver-popover-close-btn {
+  color: var(--muted);
+}
+
+.ecoguide-tour-popover .driver-popover-close-btn:hover,
+.ecoguide-tour-popover .driver-popover-close-btn:focus {
+  color: var(--surface-foreground);
+}
+
+.ecoguide-tour-popover .driver-popover-progress-text {
+  color: var(--muted);
+}
+
+.ecoguide-tour-popover .driver-popover-footer-btn {
+  border-radius: 0.5rem;
+  border: 1px solid var(--border);
+  background-color: var(--surface);
+  color: var(--surface-foreground);
+  font-weight: 600;
+  padding: 0.375rem 0.75rem;
+  transition: opacity 0.15s ease-out, background-color 0.15s ease-out;
+}
+
+.ecoguide-tour-popover .driver-popover-footer-btn:hover,
+.ecoguide-tour-popover .driver-popover-footer-btn:focus {
+  background-color: var(--border);
+}
+
+.ecoguide-tour-popover .driver-popover-next-btn,
+.ecoguide-tour-popover .driver-popover-done-btn {
+  border-color: var(--accent);
+  background-color: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.ecoguide-tour-popover .driver-popover-next-btn:hover,
+.ecoguide-tour-popover .driver-popover-done-btn:hover {
+  background-color: var(--accent);
+  opacity: 0.9;
+}
+
+.ecoguide-tour-popover .driver-popover-arrow-side-left {
+  border-right-color: var(--surface);
+}
+.ecoguide-tour-popover .driver-popover-arrow-side-right {
+  border-left-color: var(--surface);
+}
+.ecoguide-tour-popover .driver-popover-arrow-side-top {
+  border-bottom-color: var(--surface);
+}
+.ecoguide-tour-popover .driver-popover-arrow-side-bottom {
+  border-top-color: var(--surface);
 }

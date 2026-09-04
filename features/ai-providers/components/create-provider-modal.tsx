@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import type { ReactElement } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button, Spinner } from "@heroui/react";
@@ -22,7 +22,7 @@ import {
 } from "../types/ai-provider.types";
 
 interface CreateProviderModalProps {
-  trigger: ReactNode;
+  trigger: ReactElement;
 }
 
 export function CreateProviderModal({ trigger }: CreateProviderModalProps) {

@@ -7,12 +7,22 @@ import {
   type ColumnDef,
 } from "@tanstack/react-table";
 import { Spinner } from "@heroui/react";
+import { cn } from "@/lib/utils";
 
 interface DataTableProps<T> {
   columns: ColumnDef<T, unknown>[];
   data: T[];
   isLoading?: boolean;
   emptyMessage: string;
+  /** Se renderiza dentro del mismo contenedor con borde que la tabla (ej.
+   *  <PaginationControls />), separado por un border-t — así el footer de
+   *  paginación queda visualmente unido a la tabla en vez de flotar debajo. */
+  footer?: React.ReactNode;
+  /** Si se define, toda la fila se vuelve clickeable (con cursor-pointer y
+   *  hover más marcado) y navega al detalle del recurso. La columna con
+   *  `id: "actions"` detiene la propagación del click para no disparar
+   *  también la navegación de la fila. */
+  onRowClick?: (row: T) => void;
 }
 
 export function DataTable<T>({
@@ -20,6 +30,8 @@ export function DataTable<T>({
   data,
   isLoading,
   emptyMessage,
+  footer,
+  onRowClick,
 }: DataTableProps<T>) {
   // TanStack Table's return value isn't safely memoizable by the React
   // Compiler (it returns fresh functions each render by design); this is a
@@ -75,10 +87,24 @@ export function DataTable<T>({
               table.getRowModel().rows.map((row) => (
                 <tr
                   key={row.id}
-                  className="transition-colors hover:bg-surface-secondary/40"
+                  onClick={
+                    onRowClick ? () => onRowClick(row.original) : undefined
+                  }
+                  className={cn(
+                    "transition-colors hover:bg-surface-secondary/40",
+                    onRowClick && "cursor-pointer",
+                  )}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <td key={cell.id} className="px-4 py-3 align-middle">
+                    <td
+                      key={cell.id}
+                      className="px-4 py-3 align-middle"
+                      onClick={
+                        onRowClick && cell.column.id === "actions"
+                          ? (e) => e.stopPropagation()
+                          : undefined
+                      }
+                    >
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </td>
                   ))}
@@ -88,6 +114,7 @@ export function DataTable<T>({
           </tbody>
         </table>
       </div>
+      {footer}
     </div>
   );
 }

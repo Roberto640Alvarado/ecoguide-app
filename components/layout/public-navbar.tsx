@@ -3,8 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { Button } from "@heroui/react";
-import { buttonVariants } from "@heroui/styles";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Languages, LogOut } from "lucide-react";
 import { useLanguageStore } from "@/store/language-store";
 import { useAuthStore } from "@/store/auth-store";
@@ -49,7 +48,7 @@ export function PublicNavbar() {
           <Button
             variant="ghost"
             size="sm"
-            onPress={toggleLanguage}
+            onClick={toggleLanguage}
             aria-label="Toggle language"
           >
             <Languages className="h-4 w-4" aria-hidden="true" />
@@ -58,7 +57,7 @@ export function PublicNavbar() {
 
           {user ? (
             <>
-              <span className="hidden items-center gap-2 text-sm text-muted sm:flex">
+              <span className="hidden items-center gap-2 text-sm text-muted-foreground sm:flex">
                 <UserAvatar
                   name={user.name}
                   avatarUrl={user.avatarUrl}
@@ -68,14 +67,14 @@ export function PublicNavbar() {
               </span>
               <Link
                 href={getDashboardPath(user.role)}
-                className={buttonVariants({ variant: "primary", size: "sm" })}
+                className={buttonVariants({ variant: "default", size: "sm" })}
               >
                 {language === "en" ? "Go to dashboard" : "Ir al panel"}
               </Link>
               <Button
                 variant="outline"
                 size="sm"
-                onPress={() => logout()}
+                onClick={() => logout()}
                 aria-label="Logout"
               >
                 <LogOut className="h-4 w-4" aria-hidden="true" />
@@ -95,7 +94,7 @@ export function PublicNavbar() {
 
               <Link
                 href="/register"
-                className={buttonVariants({ variant: "primary", size: "sm" })}
+                className={buttonVariants({ variant: "default", size: "sm" })}
               >
                 {t.register}
               </Link>

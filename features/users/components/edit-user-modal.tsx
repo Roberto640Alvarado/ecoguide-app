@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import type { ReactElement } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button, Spinner } from "@heroui/react";
@@ -18,7 +18,7 @@ import type { User } from "../types/user.types";
 
 interface EditUserModalProps {
   user: User;
-  trigger: ReactNode;
+  trigger: ReactElement;
 }
 
 export function EditUserModal({ user, trigger }: EditUserModalProps) {

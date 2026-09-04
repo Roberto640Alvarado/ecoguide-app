@@ -40,8 +40,8 @@ npm run lint                 # ESLint
 - React 19
 - TypeScript (strict)
 - Tailwind CSS v4
-- HeroUI (`@heroui/react`, `@heroui/theme`, `@heroui/system`) — librería de componentes
-- Framer Motion — animaciones (usada internamente por HeroUI también)
+- shadcn/ui (Radix UI + Tailwind) — librería de componentes, en migración progresiva vista por vista (ver "Sistema de Diseño"). HeroUI (`@heroui/react`, `@heroui/theme`, `@heroui/system`) se mantiene temporalmente en las vistas aún no migradas.
+- Framer Motion — animaciones e interacciones (micro-interacciones, transiciones de vista, reveals); ver "Sistema de Diseño" para lineamientos de uso
 - TanStack React Query — data fetching, cache, mutaciones contra la API
 - TanStack React Table — tablas del panel de TEACHER (Users, ProtectedAreas, FlashCards, AIProviders)
 - React Hook Form + Zod + `@hookform/resolvers` — formularios y validación, en espejo de los DTOs de la API
@@ -271,6 +271,89 @@ NEXT_PUBLIC_API_URL=http://localhost:3000   # Base URL de ecoguide-api
 ```
 
 Nunca poner secretos reales en variables `NEXT_PUBLIC_*` (son públicas en el bundle del cliente). Este frontend no debe necesitar ningún secreto propio: las API keys de los proveedores de IA, credenciales de correo, etc. viven únicamente en `ecoguide-api`.
+
+---
+
+# Sistema de Diseño
+
+EcoGuide App está migrando su UI de HeroUI a **shadcn/ui** (Radix UI + Tailwind CSS v4), con animaciones mediante **Framer Motion**. La migración es progresiva, vista por vista (ver "Migración de HeroUI a shadcn/ui" al final de esta sección): mientras una vista no haya sido migrada puede seguir usando componentes de HeroUI; una vez migrada debe usar exclusivamente shadcn/ui.
+
+## Principios de diseño
+
+El producto es una plataforma educativa. Toda vista nueva o rediseñada debe sentirse:
+
+- Educativa: jerarquía visual clara, contenido fácil de escanear, sin sobrecarga de elementos por pantalla.
+- Minimalista y moderna: mucho espacio en blanco, tipografía como protagonista, color usado con propósito (nunca decorativo porque sí).
+- Intuitiva: patrones de interacción predecibles, feedback inmediato ante cada acción, cero pasos innecesarios entre el estudiante/docente y su objetivo.
+- Responsive por defecto: mobile-first, sin scroll horizontal, componentes que se reorganizan (nunca solo se "encogen") en los breakpoints `sm`, `md`, `lg`, `xl` de Tailwind.
+- Accesible: contraste AA mínimo, foco visible, soporte de teclado completo, `prefers-reduced-motion` respetado (ver "Animación").
+
+## Paleta de color
+
+Paleta de marca de EcoGuide — fuente de verdad. No introducir colores fuera de esta paleta salvo los estados semánticos definidos más abajo (destructive/warning), que sí son una extensión permitida.
+
+- Ink Black — `#011627` — texto principal en modo claro, fondo en modo oscuro.
+- Steel Blue — `#6D9DC5` — acento informativo/secundario (badges, íconos, series de gráficas, CTAs secundarios en landing).
+- Sea Green — `#09814A` — color primario de marca (CTA principal, links activos, estado "success").
+- Porcelain — `#FDFFFC` — fondo en modo claro, texto principal en modo oscuro.
+- Rosy Granite — `#84828F` — neutro (bordes, texto secundario/muted, superficies deshabilitadas).
+
+## Tokens semánticos (light / dark)
+
+Se definen como variables CSS en `app/globals.css` (dentro de `:root`/`[data-theme="light"]` y `.dark`/`[data-theme="dark"]`) y se exponen como utilidades Tailwind (`bg-primary`, `text-foreground`, etc.) vía el bloque `@theme inline`, siguiendo la convención de shadcn/ui sobre Tailwind v4.
+
+Modo claro:
+
+- `background` → Porcelain `#FDFFFC`
+- `foreground` → Ink Black `#011627`
+- `card` / `popover` → blanco `#FFFFFF` (ligera separación sobre el fondo Porcelain)
+- `primary` → Sea Green `#09814A` · `primary-foreground` → Porcelain
+- `secondary` → gris derivado de Rosy Granite muy claro · `secondary-foreground` → Ink Black
+- `muted` → gris derivado de Rosy Granite muy claro · `muted-foreground` → Rosy Granite
+- `accent` (uso informativo — no confundir con `primary`) → Steel Blue · `accent-foreground` → Ink Black
+- `border` / `input` → gris derivado de Rosy Granite claro
+- `ring` → Sea Green
+
+Modo oscuro:
+
+- `background` → Ink Black `#011627`
+- `foreground` → Porcelain `#FDFFFC`
+- `card` / `popover` → Ink Black aclarado (superficie apenas más clara que el fondo)
+- `primary` → Sea Green aclarado, para mantener contraste AA sobre fondo oscuro · `primary-foreground` → Ink Black
+- `secondary` / `muted` → gris derivado de Ink Black · `muted-foreground` → Rosy Granite aclarado
+- `accent` → Steel Blue · `accent-foreground` → Ink Black
+- `border` / `input` → gris derivado de Ink Black aclarado
+- `ring` → Sea Green aclarado
+
+Estados semánticos que no vienen en la paleta de marca (se agregan como tokens propios, nunca reemplazan los de marca):
+
+- `destructive` → un único rojo accesible, reutilizado en claro/oscuro (aclarado en oscuro).
+- `warning` → un único ámbar accesible, misma regla.
+- `success` → reutiliza `primary` (Sea Green) — no crear un verde adicional.
+- `info` → reutiliza `accent` (Steel Blue).
+
+## Componentes — shadcn/ui
+
+- Todo componente nuevo se instala vía CLI (`npx shadcn@latest add <componente>`) y vive en `components/ui/`, igual que hoy.
+- Los primitivos escritos a mano que ya existen en `components/ui/` (ej. `text-field.tsx`, `select-field.tsx`, `pin-code-input.tsx`, `data-table.tsx`) se migran a sus equivalentes de shadcn cuando se rediseñe la vista que los usa — no se duplican wrappers ni se mantienen dos versiones del mismo componente.
+- Nunca importar componentes de `@heroui/react` en una vista ya migrada.
+- Mantener el patrón actual de "field" (wrapper de label + error + descripción alrededor del input) al migrar a shadcn, para que los formularios sigan reflejando 1:1 las reglas de los DTOs de la API.
+
+## Animación — Framer Motion
+
+- Usar para: transición de entrada de página/sección (fade + desplazamiento leve), reveals al hacer scroll en vistas de estudiante (landing, áreas protegidas, flashcards), estados de carga/skeleton, feedback de acciones (ej. combinar con el `canvas-confetti` ya usado en el modal de resultado).
+- No usar para: lo que Tailwind/CSS ya resuelve bien (hover simple, transición de color) — reservar Framer Motion para movimiento con propósito real.
+- Duración por defecto: 150–250ms para micro-interacciones, 300–400ms para transiciones de vista. Easing `easeOut` para elementos que salen, `easeInOut` para los que entran y salen.
+- Respetar siempre `prefers-reduced-motion` (Framer Motion lo soporta vía `useReducedMotion`) — ninguna animación puramente decorativa debe ignorar esta preferencia.
+
+## Migración de HeroUI a shadcn/ui
+
+Se hace vista por vista, nunca de una sola vez:
+
+1. Se rediseña la vista completa con shadcn/ui + Framer Motion + la paleta de esta sección.
+2. Se eliminan los imports de `@heroui/react` de esa vista (y de cualquier componente propio usado solo por ella).
+3. Se documenta el cambio en `plan-history/`, siguiendo la convención ya definida en "Historial de Planes".
+4. `@heroui/styles`, `@heroui/react`, `@heroui/system` y `@heroui/theme` se desinstalan del proyecto únicamente cuando la última vista haya sido migrada.
 
 ---
 

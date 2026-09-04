@@ -1,12 +1,25 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { parseAsInteger, parseAsString, useQueryState } from "nuqs";
-import { Button, Spinner } from "@heroui/react";
+import { Spinner } from "@heroui/react";
+import type { DriveStep } from "driver.js";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { MapPinned, Search } from "lucide-react";
 import { useLanguageStore } from "@/store/language-store";
+import { PageHeader } from "@/components/layout/page-header";
+import { PageTourBanner } from "@/components/layout/page-tour-banner";
 import { PaginationControls } from "@/components/ui/pagination-controls";
+import { usePageTour } from "@/hooks/use-page-tour";
 import { useProtectedAreas } from "@/features/protected-areas/hooks/use-protected-areas";
 import { ProtectedAreaCard } from "@/features/protected-areas/components/protected-area-card";
 
@@ -54,88 +67,154 @@ export default function TeacherProtectedAreasPage() {
     isPublished: status === "" ? undefined : status === "published",
   });
 
+  const tourSteps = useMemo<DriveStep[]>(() => {
+    if (isLoading) {
+      return [];
+    }
+
+    return [
+      {
+        element: '[data-tour="action"]',
+        popover: {
+          title: language === "en" ? "New area" : "Nueva área",
+          description:
+            language === "en"
+              ? "Create a new protected area for students to explore."
+              : "Crea una nueva área protegida para que los estudiantes la exploren.",
+        },
+      },
+      {
+        element: '[data-tour="search"]',
+        popover: {
+          title: language === "en" ? "Search" : "Buscar",
+          description:
+            language === "en"
+              ? "Find an area by name."
+              : "Encuentra un área por nombre.",
+        },
+      },
+      {
+        element: '[data-tour="filter-status"]',
+        popover: {
+          title: language === "en" ? "Filter by status" : "Filtrar por estado",
+          description:
+            language === "en"
+              ? "Show only published areas or only drafts."
+              : "Muestra solo áreas publicadas o solo borradores.",
+        },
+      },
+      {
+        element: '[data-tour="grid"]',
+        popover: {
+          title: language === "en" ? "Areas" : "Áreas",
+          description:
+            language === "en"
+              ? "Open \"Manage\" on any card to edit its content, or unpublish it."
+              : "Abre \"Manage\" en cualquier tarjeta para editar su contenido o despublicarla.",
+        },
+      },
+    ];
+  }, [isLoading, language]);
+
+  const { start: startTour } = usePageTour({
+    steps: tourSteps,
+    storageKey: "teacher-protected-areas",
+  });
+
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-3">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent-soft text-accent-soft-foreground">
-            <MapPinned className="h-5 w-5" aria-hidden="true" />
-          </span>
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">
-              {language === "en" ? "Protected Areas" : "Áreas protegidas"}
-            </h1>
-            <p className="text-sm text-muted">
-              {language === "en"
-                ? "Manage the protected areas students can explore."
-                : "Administra las áreas protegidas que los estudiantes pueden explorar."}
-            </p>
-          </div>
-        </div>
-        <Link href="/teacher/protected-areas/new">
-          <Button variant="primary">
-            {language === "en" ? "New area" : "Nueva área"}
-          </Button>
+    <div className="flex flex-col gap-4">
+      <PageHeader
+        icon={MapPinned}
+        title={language === "en" ? "Protected Areas" : "Áreas protegidas"}
+      />
+
+      <PageTourBanner
+        title={
+          language === "en"
+            ? "Learn to manage your areas"
+            : "Aprende a administrar tus áreas"
+        }
+        description={
+          language === "en"
+            ? "Browse the list, filter by status, and create new protected areas."
+            : "Explora el listado, filtra por estado y crea nuevas áreas protegidas."
+        }
+        buttonLabel={language === "en" ? "Take the tour" : "Ver tour guiado"}
+        onStart={startTour}
+      />
+
+      <div className="flex justify-end">
+        <Link href="/teacher/protected-areas/new" data-tour="action">
+          <Button>{language === "en" ? "New area" : "Nueva área"}</Button>
         </Link>
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="relative w-full sm:max-w-xs">
           <Search
-            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted"
+            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
             aria-hidden="true"
           />
-          <input
+          <Input
+            data-tour="search"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             placeholder={
               language === "en" ? "Search areas..." : "Buscar áreas..."
             }
-            className="input w-full pl-9"
+            className="pl-9"
           />
         </div>
 
-        <div className="flex items-center gap-3">
-          <select
-            value={status}
-            onChange={(e) => {
-              setStatus(e.target.value);
+        <div className="flex items-center gap-2">
+          <Select
+            value={status || "all"}
+            onValueChange={(value) => {
+              setStatus(value === "all" ? "" : value);
               setPage(1);
             }}
-            className="input sm:w-44"
           >
-            <option value="">
-              {language === "en" ? "All statuses" : "Todos los estados"}
-            </option>
-            <option value="published">
-              {language === "en" ? "Published" : "Publicadas"}
-            </option>
-            <option value="draft">
-              {language === "en" ? "Draft" : "Borrador"}
-            </option>
-          </select>
+            <SelectTrigger data-tour="filter-status" className="sm:w-44">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">
+                {language === "en" ? "All statuses" : "Todos los estados"}
+              </SelectItem>
+              <SelectItem value="published">
+                {language === "en" ? "Published" : "Publicadas"}
+              </SelectItem>
+              <SelectItem value="draft">
+                {language === "en" ? "Draft" : "Borrador"}
+              </SelectItem>
+            </SelectContent>
+          </Select>
 
-          <select
+          <Select
             value={sort}
-            onChange={(e) => {
-              setSort(e.target.value);
+            onValueChange={(value) => {
+              setSort(value);
               setPage(1);
             }}
-            className="input sm:w-44"
           >
-            <option value="createdAt:desc">
-              {language === "en" ? "Newest first" : "Más recientes"}
-            </option>
-            <option value="createdAt:asc">
-              {language === "en" ? "Oldest first" : "Más antiguas"}
-            </option>
-            <option value="name:asc">
-              {language === "en" ? "Name (A-Z)" : "Nombre (A-Z)"}
-            </option>
-            <option value="name:desc">
-              {language === "en" ? "Name (Z-A)" : "Nombre (Z-A)"}
-            </option>
-          </select>
+            <SelectTrigger className="sm:w-44">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="createdAt:desc">
+                {language === "en" ? "Newest first" : "Más recientes"}
+              </SelectItem>
+              <SelectItem value="createdAt:asc">
+                {language === "en" ? "Oldest first" : "Más antiguas"}
+              </SelectItem>
+              <SelectItem value="name:asc">
+                {language === "en" ? "Name (A-Z)" : "Nombre (A-Z)"}
+              </SelectItem>
+              <SelectItem value="name:desc">
+                {language === "en" ? "Name (Z-A)" : "Nombre (Z-A)"}
+              </SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
@@ -144,13 +223,16 @@ export default function TeacherProtectedAreasPage() {
           <Spinner size="md" />
         </div>
       ) : data && data.items.length > 0 ? (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div
+          data-tour="grid"
+          className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
+        >
           {data.items.map((area) => (
             <ProtectedAreaCard key={area.id} area={area} />
           ))}
         </div>
       ) : (
-        <div className="rounded-2xl border border-dashed border-border p-10 text-center text-sm text-muted">
+        <div className="rounded-2xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
           {language === "en"
             ? "No protected areas found."
             : "No se encontraron áreas protegidas."}
