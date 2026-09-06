@@ -1,7 +1,7 @@
 "use client";
 
-import { Button } from "@heroui/react";
 import { Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useLanguageStore } from "@/store/language-store";
 import { useRemoveFlashCard } from "../hooks/use-remove-flash-card";
@@ -32,9 +32,10 @@ export function RemoveFlashCardButton({
         <Button
           variant="outline"
           size="sm"
-          aria-label={language === "en" ? "Delete" : "Eliminar"}
+          className="border-danger/30 text-danger hover:border-danger hover:bg-danger-soft hover:text-danger-soft-foreground"
         >
           <Trash2 className="h-4 w-4" aria-hidden="true" />
+          {language === "en" ? "Delete" : "Eliminar"}
         </Button>
       }
       icon={<Trash2 className="h-5 w-5" aria-hidden="true" />}

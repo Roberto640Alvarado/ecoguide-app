@@ -2,7 +2,9 @@
 
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button, Spinner, toast } from "@heroui/react";
+import { toast } from "@heroui/react";
+import { Loader2, Save } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { TextField } from "@/components/ui/text-field";
 import { ToggleField } from "@/components/ui/toggle-field";
 import { useLanguageStore } from "@/store/language-store";
@@ -208,8 +210,15 @@ export function TestForm({
       />
 
       <div className="flex justify-end gap-2">
-        <Button type="submit" variant="primary" isDisabled={isSubmitting}>
-          {isSubmitting ? <Spinner size="sm" /> : submitLabel}
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? (
+            <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+          ) : (
+            <>
+              <Save className="h-4 w-4" aria-hidden="true" />
+              {submitLabel}
+            </>
+          )}
         </Button>
       </div>
     </form>

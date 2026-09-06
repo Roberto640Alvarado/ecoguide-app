@@ -28,16 +28,19 @@ const WEAKNESS_TEXT = {
  * recuperación de contraseña).
  *
  * Nuestras reglas reales son solo 3 (ver register.schema.ts /
- * reset-password.schema.ts): mínimo 8 caracteres, al menos una letra y al
- * menos un número — sin distinguir mayúsculas/minúsculas ni exigir
+ * reset-password.schema.ts): mínimo 8 caracteres, al menos una letra
+ * (cualquier mayúscula/minúscula) y al menos un número — sin exigir
  * caracteres especiales. El plugin de Preline no tiene una regla "letra sin
  * distinguir mayúsculas", así que excluimos "uppercase" y
- * "special-characters" y reetiquetamos el check "lowercase" restante como
- * "contiene una letra". Esto deja un caso borde no reflejado en el
- * indicador visual (una contraseña solo en mayúsculas + números es válida
- * para el esquema pero el indicador la marcaría como incompleta); la
- * validación real que decide si el formulario se envía sigue siendo el
- * esquema zod vía `errorMessage`, este indicador es solo una ayuda visual.
+ * "special-characters" y dejamos el check "lowercase" restante, etiquetado
+ * honestamente como "contiene una letra minúscula" (antes decía solo
+ * "contiene una letra", lo que confundía con contraseñas en mayúsculas:
+ * mostraban el check en rojo sin explicar por qué). Esto deja un caso
+ * borde no reflejado en el indicador visual (una contraseña solo en
+ * mayúsculas + números es válida para el esquema pero el indicador la
+ * marcaría como incompleta); la validación real que decide si el
+ * formulario se envía sigue siendo el esquema zod vía `errorMessage`, este
+ * indicador es solo una ayuda visual.
  */
 export function PasswordField({
   value,
@@ -158,7 +161,9 @@ export function PasswordField({
                 <span data-uncheck>
                   <X className="size-4 shrink-0" aria-hidden="true" />
                 </span>
-                {language === "en" ? "Contains a letter." : "Contiene una letra."}
+                {language === "en"
+                  ? "Contains a lowercase letter."
+                  : "Contiene una letra minúscula."}
               </li>
               <li
                 data-hs-strong-password-hints-rule-text="numbers"

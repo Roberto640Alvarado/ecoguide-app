@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, type ChangeEvent } from "react";
+import { useRef, useState, type ChangeEvent, type DragEvent } from "react";
 import Image from "next/image";
 import { Spinner } from "@heroui/react";
 import { ImagePlus, X } from "lucide-react";
@@ -29,11 +29,9 @@ export function FlashCardImageUploader({
   const language = useLanguageStore((state) => state.language);
   const uploadImage = useUploadFlashCardImage();
   const inputRef = useRef<HTMLInputElement>(null);
+  const [isDraggingOver, setIsDraggingOver] = useState(false);
 
-  function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0];
-    event.target.value = "";
-
+  function processFile(file: File | undefined) {
     if (!file) {
       return;
     }
@@ -49,6 +47,23 @@ export function FlashCardImageUploader({
     uploadImage.mutate(file, {
       onSuccess: ({ url }) => onChange(url),
     });
+  }
+
+  function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    processFile(file);
+  }
+
+  function handleDrop(event: DragEvent<HTMLButtonElement>) {
+    event.preventDefault();
+    setIsDraggingOver(false);
+
+    if (uploadImage.isPending) {
+      return;
+    }
+
+    processFile(event.dataTransfer.files?.[0]);
   }
 
   return (
@@ -71,7 +86,15 @@ export function FlashCardImageUploader({
             type="button"
             onClick={() => inputRef.current?.click()}
             disabled={uploadImage.isPending}
-            className="flex h-24 w-24 shrink-0 flex-col items-center justify-center gap-1 rounded-2xl border border-dashed border-border text-muted transition-colors hover:border-accent hover:text-accent disabled:opacity-60"
+            onDragOver={(e) => {
+              e.preventDefault();
+              setIsDraggingOver(true);
+            }}
+            onDragLeave={() => setIsDraggingOver(false)}
+            onDrop={handleDrop}
+            className={`flex h-24 w-24 shrink-0 flex-col items-center justify-center gap-1 rounded-2xl border border-dashed text-muted transition-colors hover:border-accent hover:text-accent disabled:opacity-60 ${
+              isDraggingOver ? "border-accent bg-accent-soft/40" : "border-border"
+            }`}
           >
             {uploadImage.isPending ? (
               <Spinner size="sm" />

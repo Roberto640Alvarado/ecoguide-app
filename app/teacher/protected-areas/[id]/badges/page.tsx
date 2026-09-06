@@ -6,8 +6,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { parseAsInteger, parseAsString, useQueryState } from "nuqs";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Button } from "@heroui/react";
-import { ArrowLeft, ImageOff, Medal, Search, SquarePen } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft, ImageOff, Medal, Plus, Search, SquarePen } from "lucide-react";
 import { useLanguageStore } from "@/store/language-store";
 import { DataTable } from "@/components/ui/data-table";
 import { PaginationControls } from "@/components/ui/pagination-controls";
@@ -107,12 +107,9 @@ export default function TeacherBadgesPage() {
           <Link
             href={`/teacher/protected-areas/${params.id}/badges/${row.original.id}/edit`}
           >
-            <Button
-              variant="outline"
-              size="sm"
-              aria-label={language === "en" ? "Edit" : "Editar"}
-            >
+            <Button variant="outline" size="sm">
               <SquarePen className="h-4 w-4" aria-hidden="true" />
+              {language === "en" ? "Edit" : "Editar"}
             </Button>
           </Link>
           <RemoveBadgeButton badge={row.original} protectedAreaId={params.id} />
@@ -150,7 +147,8 @@ export default function TeacherBadgesPage() {
           </div>
         </div>
         <Link href={`/teacher/protected-areas/${params.id}/badges/new`}>
-          <Button variant="primary">
+          <Button className="rounded-full">
+            <Plus className="h-4 w-4" aria-hidden="true" />
             {language === "en" ? "New badge" : "Nueva insignia"}
           </Button>
         </Link>

@@ -3,8 +3,8 @@
 import type { ReactElement } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button, Spinner } from "@heroui/react";
-import { Cpu } from "lucide-react";
+import { Cpu, Loader2, Save, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { FormModal } from "@/components/ui/form-modal";
 import { SecretField } from "@/components/ui/secret-field";
 import { SelectField } from "@/components/ui/select-field";
@@ -144,20 +144,18 @@ export function EditProviderModal({ provider, trigger }: EditProviderModalProps)
             />
 
             <div className="mt-2 flex justify-end gap-2">
-              <Button variant="outline" type="button" onPress={close}>
+              <Button variant="outline" type="button" onClick={close}>
+                <X className="h-4 w-4" aria-hidden="true" />
                 {language === "en" ? "Cancel" : "Cancelar"}
               </Button>
-              <Button
-                type="submit"
-                variant="primary"
-                isDisabled={updateProvider.isPending}
-              >
+              <Button type="submit" disabled={updateProvider.isPending}>
                 {updateProvider.isPending ? (
-                  <Spinner size="sm" />
-                ) : language === "en" ? (
-                  "Save changes"
+                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
                 ) : (
-                  "Guardar cambios"
+                  <>
+                    <Save className="h-4 w-4" aria-hidden="true" />
+                    {language === "en" ? "Save changes" : "Guardar cambios"}
+                  </>
                 )}
               </Button>
             </div>

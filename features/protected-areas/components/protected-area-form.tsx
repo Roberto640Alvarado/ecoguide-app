@@ -3,8 +3,8 @@
 import dynamic from "next/dynamic";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button, Spinner } from "@heroui/react";
-import { MapPin } from "lucide-react";
+import { Loader2, MapPin, Save, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { TextField } from "@/components/ui/text-field";
 import { ToggleField } from "@/components/ui/toggle-field";
@@ -29,7 +29,10 @@ const LocationPickerMap = dynamic(
     ssr: false,
     loading: () => (
       <div className="flex h-80 w-full items-center justify-center rounded-2xl border border-border bg-surface-secondary">
-        <Spinner size="sm" />
+        <Loader2
+          className="h-5 w-5 animate-spin text-muted-foreground"
+          aria-hidden="true"
+        />
       </div>
     ),
   },
@@ -115,6 +118,11 @@ export function ProtectedAreaForm({
     >
       <FormSection
         title={language === "en" ? "Basic information" : "Información básica"}
+        description={
+          language === "en"
+            ? "Enter the area's name and write a description for students."
+            : "Ingresa el nombre y la descripción del área para los estudiantes."
+        }
       >
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-[2fr_1fr] sm:items-end">
           <Controller
@@ -124,7 +132,11 @@ export function ProtectedAreaForm({
               <TextField
                 {...field}
                 label={language === "en" ? "Name" : "Nombre"}
-                placeholder="Parque Nacional El Imposible"
+                placeholder={
+                  language === "en"
+                    ? "E.g. El Imposible National Park"
+                    : "Ej: Parque Nacional El Imposible"
+                }
                 error={errors.name?.message}
               />
             )}
@@ -136,6 +148,11 @@ export function ProtectedAreaForm({
             render={({ field }) => (
               <ToggleField
                 label={language === "en" ? "Published" : "Publicada"}
+                description={
+                  language === "en"
+                    ? "Visible to students right away."
+                    : "Visible para los estudiantes de inmediato."
+                }
                 checked={field.value}
                 onChange={field.onChange}
               />
@@ -154,8 +171,8 @@ export function ProtectedAreaForm({
               label={language === "en" ? "Description" : "Descripción"}
               placeholder={
                 language === "en"
-                  ? "Cloud forest reserve in Ahuachapán."
-                  : "Reserva de bosque nuboso en Ahuachapán."
+                  ? "E.g. Cloud forest reserve in Ahuachapán."
+                  : "Ej: Reserva de bosque nuboso en Ahuachapán."
               }
               error={errors.description?.message}
             />
@@ -190,7 +207,14 @@ export function ProtectedAreaForm({
           )}
         </FormSection>
 
-        <FormSection title={language === "en" ? "Images" : "Imágenes"}>
+        <FormSection
+          title={language === "en" ? "Images" : "Imágenes"}
+          description={
+            language === "en"
+              ? "Upload the images for this area below."
+              : "Carga a continuación las imágenes de esta área."
+          }
+        >
           <ImageUploader
             images={images}
             onChange={(value) =>
@@ -206,12 +230,29 @@ export function ProtectedAreaForm({
         </FormSection>
       </div>
 
-      <div className="flex justify-end gap-2">
-        <Button variant="outline" type="button" onPress={onCancel}>
+      <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+        <Button
+          variant="outline"
+          type="button"
+          onClick={onCancel}
+          className="w-full sm:w-auto"
+        >
+          <X className="h-4 w-4" aria-hidden="true" />
           {language === "en" ? "Cancel" : "Cancelar"}
         </Button>
-        <Button type="submit" variant="primary" isDisabled={isSubmitting}>
-          {isSubmitting ? <Spinner size="sm" /> : submitLabel}
+        <Button
+          type="submit"
+          disabled={isSubmitting}
+          className="w-full sm:w-auto"
+        >
+          {isSubmitting ? (
+            <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+          ) : (
+            <>
+              <Save className="h-4 w-4" aria-hidden="true" />
+              {submitLabel}
+            </>
+          )}
         </Button>
       </div>
     </form>

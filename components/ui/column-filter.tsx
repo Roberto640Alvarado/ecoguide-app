@@ -72,6 +72,8 @@ export function ColumnFilter({
     setOpen(false);
   }
 
+  const Icon = ListFilter;
+
   return (
     <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
@@ -85,21 +87,23 @@ export function ColumnFilter({
             isActive ? "text-primary" : "text-muted-foreground",
           )}
         >
-          <ListFilter className="h-3.5 w-3.5" aria-hidden="true" />
+          <Icon className="h-3.5 w-3.5" aria-hidden="true" />
         </Button>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-64">
         <PopoverTitle>{popoverTitle}</PopoverTitle>
 
         <div className="mt-3">
-          {type === "text" ? (
+          {type === "text" && (
             <Input
               autoFocus
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               placeholder={placeholder}
             />
-          ) : (
+          )}
+
+          {type === "select" && (
             <div className="flex flex-col gap-2">
               {options?.map((option) => {
                 const checked = draft === option.value;

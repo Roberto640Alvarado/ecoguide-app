@@ -41,4 +41,8 @@ export interface FindAIProvidersParams {
   search?: string;
   sort?: string;
   isActive?: boolean;
+  /** "yyyy-MM-dd". */
+  createdFrom?: string;
+  /** "yyyy-MM-dd". */
+  createdTo?: string;
 }

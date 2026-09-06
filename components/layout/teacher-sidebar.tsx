@@ -1,6 +1,6 @@
 "use client";
 
-import { LayoutDashboard, MapPinned, Users, Cpu } from "lucide-react";
+import { LayoutDashboard, MapPinned, GraduationCap, UserCog, Cpu } from "lucide-react";
 import { DashboardShell, type DashboardNavItem } from "./dashboard-shell";
 import { useLanguageStore } from "@/store/language-store";
 
@@ -20,7 +20,12 @@ export function TeacherSidebar({ children }: TeacherSidebarProps) {
     {
       label: language === "en" ? "Students" : "Estudiantes",
       href: "/teacher/users",
-      icon: Users,
+      icon: GraduationCap,
+    },
+    {
+      label: language === "en" ? "Teachers" : "Docentes",
+      href: "/teacher/teachers",
+      icon: UserCog,
     },
     {
       label: language === "en" ? "Protected Areas" : "Áreas protegidas",

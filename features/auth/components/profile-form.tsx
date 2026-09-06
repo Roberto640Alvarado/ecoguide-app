@@ -3,8 +3,9 @@
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
-import { Button, Spinner, toast } from "@heroui/react";
-import { KeyRound } from "lucide-react";
+import { toast } from "@heroui/react";
+import { KeyRound, Loader2, Save } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { TextField } from "@/components/ui/text-field";
 import { useAuthStore } from "@/store/auth-store";
 import { useLanguageStore } from "@/store/language-store";
@@ -143,17 +144,14 @@ export function ProfileForm() {
       </section>
 
       <div className="flex justify-end">
-        <Button
-          type="submit"
-          variant="primary"
-          isDisabled={updateProfile.isPending}
-        >
+        <Button type="submit" disabled={updateProfile.isPending}>
           {updateProfile.isPending ? (
-            <Spinner size="sm" />
-          ) : language === "en" ? (
-            "Save changes"
+            <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
           ) : (
-            "Guardar cambios"
+            <>
+              <Save className="h-4 w-4" aria-hidden="true" />
+              {language === "en" ? "Save changes" : "Guardar cambios"}
+            </>
           )}
         </Button>
       </div>

@@ -14,7 +14,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { MapPinned, Search } from "lucide-react";
+import { DateRangeFilter } from "@/components/ui/date-range-filter";
+import { FilterX, MapPinned, Plus, Search } from "lucide-react";
 import { useLanguageStore } from "@/store/language-store";
 import { PageHeader } from "@/components/layout/page-header";
 import { PageTourBanner } from "@/components/layout/page-tour-banner";
@@ -44,6 +45,10 @@ export default function TeacherProtectedAreasPage() {
     "sort",
     parseAsString.withDefault("createdAt:desc"),
   );
+  const [dateRange, setDateRange] = useQueryState(
+    "created",
+    parseAsString.withDefault(""),
+  );
 
   const [searchInput, setSearchInput] = useState(search);
 
@@ -59,12 +64,26 @@ export default function TeacherProtectedAreasPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchInput]);
 
+  const [createdFrom, createdTo] = dateRange.split("_");
+  const hasActiveFilters =
+    search !== "" || status !== "" || dateRange !== "";
+
+  function handleClearFilters() {
+    setSearchInput("");
+    setSearch("");
+    setStatus("");
+    setDateRange("");
+    setPage(1);
+  }
+
   const { data, isLoading } = useProtectedAreas({
     page,
     limit: PAGE_SIZE,
     search: search || undefined,
     sort,
     isPublished: status === "" ? undefined : status === "published",
+    createdFrom: createdFrom || undefined,
+    createdTo: createdTo || undefined,
   });
 
   const tourSteps = useMemo<DriveStep[]>(() => {
@@ -101,6 +120,16 @@ export default function TeacherProtectedAreasPage() {
             language === "en"
               ? "Show only published areas or only drafts."
               : "Muestra solo áreas publicadas o solo borradores.",
+        },
+      },
+      {
+        element: '[data-tour="filter-date"]',
+        popover: {
+          title: language === "en" ? "Filter by date" : "Filtrar por fecha",
+          description:
+            language === "en"
+              ? "Narrow the list down to a creation date range."
+              : "Reduce la lista a un rango de fechas de creación.",
         },
       },
       {
@@ -143,14 +172,12 @@ export default function TeacherProtectedAreasPage() {
         onStart={startTour}
       />
 
-      <div className="flex justify-end">
-        <Link href="/teacher/protected-areas/new" data-tour="action">
-          <Button>{language === "en" ? "New area" : "Nueva área"}</Button>
-        </Link>
-      </div>
-
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative w-full sm:max-w-xs">
+      {/* Toolbar de filtros: envuelta en su propia tarjeta (en vez de flotar
+          suelta sobre el grid) para que se lea como un bloque, con
+          buscador arriba y el resto de controles abajo — así ninguno queda
+          apretado en mobile. */}
+      <div className="flex flex-col gap-3 rounded-2xl border border-border bg-surface p-4">
+        <div className="relative w-full">
           <Search
             className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
             aria-hidden="true"
@@ -166,55 +193,101 @@ export default function TeacherProtectedAreasPage() {
           />
         </div>
 
-        <div className="flex items-center gap-2">
-          <Select
-            value={status || "all"}
-            onValueChange={(value) => {
-              setStatus(value === "all" ? "" : value);
-              setPage(1);
-            }}
-          >
-            <SelectTrigger data-tour="filter-status" className="sm:w-44">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">
-                {language === "en" ? "All statuses" : "Todos los estados"}
-              </SelectItem>
-              <SelectItem value="published">
-                {language === "en" ? "Published" : "Publicadas"}
-              </SelectItem>
-              <SelectItem value="draft">
-                {language === "en" ? "Draft" : "Borrador"}
-              </SelectItem>
-            </SelectContent>
-          </Select>
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+            <Select
+              value={status || "all"}
+              onValueChange={(value) => {
+                setStatus(value === "all" ? "" : value);
+                setPage(1);
+              }}
+            >
+              <SelectTrigger
+                data-tour="filter-status"
+                className="w-full sm:w-44"
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">
+                  {language === "en" ? "All statuses" : "Todos los estados"}
+                </SelectItem>
+                <SelectItem value="published">
+                  {language === "en" ? "Published" : "Publicadas"}
+                </SelectItem>
+                <SelectItem value="draft">
+                  {language === "en" ? "Draft" : "Borrador"}
+                </SelectItem>
+              </SelectContent>
+            </Select>
 
-          <Select
-            value={sort}
-            onValueChange={(value) => {
-              setSort(value);
-              setPage(1);
-            }}
-          >
-            <SelectTrigger className="sm:w-44">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="createdAt:desc">
-                {language === "en" ? "Newest first" : "Más recientes"}
-              </SelectItem>
-              <SelectItem value="createdAt:asc">
-                {language === "en" ? "Oldest first" : "Más antiguas"}
-              </SelectItem>
-              <SelectItem value="name:asc">
-                {language === "en" ? "Name (A-Z)" : "Nombre (A-Z)"}
-              </SelectItem>
-              <SelectItem value="name:desc">
-                {language === "en" ? "Name (Z-A)" : "Nombre (Z-A)"}
-              </SelectItem>
-            </SelectContent>
-          </Select>
+            <DateRangeFilter
+              data-tour="filter-date"
+              value={dateRange}
+              onApply={(value) => {
+                setDateRange(value);
+                setPage(1);
+              }}
+              placeholder={
+                language === "en" ? "Created date" : "Fecha de creación"
+              }
+              popoverTitle={
+                language === "en" ? "Created date" : "Fecha de creación"
+              }
+              clearLabel={language === "en" ? "Clear" : "Limpiar"}
+              applyLabel={language === "en" ? "Apply" : "Aplicar"}
+              className="sm:w-56"
+            />
+
+            <Select
+              value={sort}
+              onValueChange={(value) => {
+                setSort(value);
+                setPage(1);
+              }}
+            >
+              <SelectTrigger className="w-full sm:w-44">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="createdAt:desc">
+                  {language === "en" ? "Newest first" : "Más recientes"}
+                </SelectItem>
+                <SelectItem value="createdAt:asc">
+                  {language === "en" ? "Oldest first" : "Más antiguas"}
+                </SelectItem>
+                <SelectItem value="name:asc">
+                  {language === "en" ? "Name (A-Z)" : "Nombre (A-Z)"}
+                </SelectItem>
+                <SelectItem value="name:desc">
+                  {language === "en" ? "Name (Z-A)" : "Nombre (Z-A)"}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleClearFilters}
+              disabled={!hasActiveFilters}
+              className="w-full sm:w-auto"
+            >
+              <FilterX className="h-4 w-4" aria-hidden="true" />
+              {language === "en" ? "Clear filters" : "Limpiar filtros"}
+            </Button>
+            <Link
+              href="/teacher/protected-areas/new"
+              data-tour="action"
+              className="w-full sm:w-auto"
+            >
+              <Button className="w-full rounded-full sm:w-auto">
+                <Plus className="h-4 w-4" aria-hidden="true" />
+                {language === "en" ? "New area" : "Nueva área"}
+              </Button>
+            </Link>
+          </div>
         </div>
       </div>
 

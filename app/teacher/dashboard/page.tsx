@@ -7,7 +7,7 @@ import {
   Cpu,
   FilePlus2,
   MapPinned,
-  PlusCircle,
+  Sparkles,
   Users,
 } from "lucide-react";
 import { useAuthStore } from "@/store/auth-store";
@@ -16,6 +16,9 @@ import { UserAvatar } from "@/components/ui/user-avatar";
 import { useUsers } from "@/features/users/hooks/use-users";
 import { useProtectedAreas } from "@/features/protected-areas/hooks/use-protected-areas";
 import { useAIProviders } from "@/features/ai-providers/hooks/use-ai-providers";
+import { GrowthChart } from "@/features/dashboard/components/growth-chart";
+import { ProviderStatusBadge } from "@/features/ai-providers/components/provider-status-badge";
+import { AI_PROVIDER_TYPE_LABELS } from "@/features/ai-providers/types/ai-provider.types";
 
 interface StatCardProps {
   icon: typeof Users;
@@ -55,33 +58,6 @@ function StatCard({ icon: Icon, label, value, accent, delay }: StatCardProps) {
   );
 }
 
-const QUICK_ACTIONS = [
-  {
-    icon: Users,
-    href: "/teacher/users",
-    en: { title: "Students", description: "Manage student accounts and access." },
-    es: { title: "Estudiantes", description: "Administra cuentas y accesos de estudiantes." },
-  },
-  {
-    icon: MapPinned,
-    href: "/teacher/protected-areas",
-    en: { title: "Protected areas", description: "Create and edit protected areas content." },
-    es: { title: "Áreas protegidas", description: "Crea y edita el contenido de las áreas protegidas." },
-  },
-  {
-    icon: Cpu,
-    href: "/teacher/ai-providers",
-    en: { title: "AI Providers", description: "Configure AI providers, models and prompts." },
-    es: { title: "Proveedores de IA", description: "Configura proveedores de IA, modelos y prompts." },
-  },
-  {
-    icon: PlusCircle,
-    href: "/teacher/protected-areas/new",
-    en: { title: "New protected area", description: "Publish a new area for students to explore." },
-    es: { title: "Nueva área protegida", description: "Publica una nueva área para tus estudiantes." },
-  },
-];
-
 export default function TeacherDashboardPage() {
   const user = useAuthStore((state) => state.user);
   const language = useLanguageStore((state) => state.language);
@@ -93,17 +69,25 @@ export default function TeacherDashboardPage() {
     sort: "createdAt:desc",
   });
   const { data: publishedAreasData, isLoading: isPublishedLoading } =
-    useProtectedAreas({ isPublished: true, limit: 1 });
+    useProtectedAreas({
+      isPublished: true,
+      limit: 5,
+      sort: "createdAt:desc",
+    });
   const { data: draftAreasData, isLoading: isDraftLoading } =
     useProtectedAreas({ isPublished: false, limit: 5, sort: "createdAt:desc" });
-  const { data: aiProvidersData, isLoading: isProvidersLoading } =
+  const { data: activeProvidersData, isLoading: isProvidersLoading } =
     useAIProviders({ isActive: true, limit: 1 });
+  const { data: providersData, isLoading: isRecentProvidersLoading } =
+    useAIProviders({ limit: 5, sort: "createdAt:desc" });
 
   const studentsTotal = studentsData?.meta.total ?? 0;
   const publishedTotal = publishedAreasData?.meta.total ?? 0;
+  const recentPublishedAreas = publishedAreasData?.items ?? [];
   const draftItems = draftAreasData?.items ?? [];
   const draftTotal = draftAreasData?.meta.total ?? 0;
-  const activeProvidersTotal = aiProvidersData?.meta.total ?? 0;
+  const activeProvidersTotal = activeProvidersData?.meta.total ?? 0;
+  const recentProviders = providersData?.items ?? [];
   const recentStudents = studentsData?.items ?? [];
 
   return (
@@ -162,6 +146,8 @@ export default function TeacherDashboardPage() {
         />
       </div>
 
+      <GrowthChart />
+
       <div className="grid gap-4 lg:grid-cols-2">
         <motion.div
           initial={{ opacity: 0, y: 16 }}
@@ -182,12 +168,12 @@ export default function TeacherDashboardPage() {
           </div>
 
           {recentStudents.length > 0 ? (
-            <ul className="flex flex-col divide-y divide-border">
+            <ul className="flex flex-col gap-1">
               {recentStudents.map((student) => (
                 <li key={student.id}>
                   <Link
                     href={`/teacher/users/${student.id}/progress`}
-                    className="flex items-center gap-3 rounded-lg py-2.5 transition-colors hover:bg-layer-hover"
+                    className="-mx-2 flex items-center gap-3 rounded-lg px-2 py-2.5 transition-colors hover:bg-layer-hover"
                   >
                     <UserAvatar
                       name={student.name}
@@ -236,12 +222,12 @@ export default function TeacherDashboardPage() {
           </div>
 
           {draftItems.length > 0 ? (
-            <ul className="flex flex-col divide-y divide-border">
+            <ul className="flex flex-col gap-1">
               {draftItems.map((area) => (
                 <li key={area.id}>
                   <Link
                     href={`/teacher/protected-areas/${area.id}/edit`}
-                    className="flex items-center gap-3 rounded-lg py-2.5 transition-colors hover:bg-layer-hover"
+                    className="-mx-2 flex items-center gap-3 rounded-lg px-2 py-2.5 transition-colors hover:bg-layer-hover"
                   >
                     <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-warning-soft text-warning-soft-foreground">
                       <MapPinned className="h-4 w-4" aria-hidden="true" />
@@ -272,37 +258,111 @@ export default function TeacherDashboardPage() {
         </motion.div>
       </div>
 
-      <div className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold text-foreground">
-          {en ? "Quick actions" : "Accesos rápidos"}
-        </h2>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {QUICK_ACTIONS.map((action, index) => {
-            const Icon = action.icon;
-            const copy = action[language];
-            return (
-              <motion.div
-                key={copy.title}
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.35 + index * 0.06 }}
-              >
-                <Link
-                  href={action.href}
-                  className="flex h-full flex-col gap-3 rounded-2xl border border-border bg-surface p-5 transition-colors hover:bg-layer-hover"
-                >
-                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent-soft text-accent-soft-foreground">
-                    <Icon className="h-5 w-5" aria-hidden="true" />
-                  </span>
-                  <h3 className="text-base font-semibold text-foreground">
-                    {copy.title}
-                  </h3>
-                  <p className="text-sm text-muted">{copy.description}</p>
-                </Link>
-              </motion.div>
-            );
-          })}
-        </div>
+      <div className="grid gap-4 lg:grid-cols-2">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.35 }}
+          className="flex flex-col gap-3 rounded-2xl border border-border bg-surface p-5"
+        >
+          <div className="flex items-center justify-between">
+            <h2 className="text-base font-semibold text-foreground">
+              {en ? "Recently published" : "Publicadas recientemente"}
+            </h2>
+            <Link
+              href="/teacher/protected-areas"
+              className="text-sm font-medium text-accent hover:underline"
+            >
+              {en ? "See all" : "Ver todas"}
+            </Link>
+          </div>
+
+          {recentPublishedAreas.length > 0 ? (
+            <ul className="flex flex-col gap-1">
+              {recentPublishedAreas.map((area) => (
+                <li key={area.id}>
+                  <Link
+                    href={`/teacher/protected-areas/${area.id}/edit`}
+                    className="-mx-2 flex items-center gap-3 rounded-lg px-2 py-2.5 transition-colors hover:bg-layer-hover"
+                  >
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-success-soft text-success-soft-foreground">
+                      <MapPinned className="h-4 w-4" aria-hidden="true" />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-foreground">
+                        {area.name}
+                      </p>
+                      <p className="text-xs text-muted">
+                        {en ? "Published" : "Publicada"}
+                      </p>
+                    </div>
+                    <ArrowRight
+                      className="h-4 w-4 shrink-0 text-muted"
+                      aria-hidden="true"
+                    />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          ) : !isPublishedLoading ? (
+            <p className="rounded-xl border border-dashed border-border bg-surface-secondary/30 p-4 text-center text-sm text-muted">
+              {en
+                ? "No published areas yet."
+                : "Todavía no hay áreas publicadas."}
+            </p>
+          ) : null}
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.4 }}
+          className="flex flex-col gap-3 rounded-2xl border border-border bg-surface p-5"
+        >
+          <div className="flex items-center justify-between">
+            <h2 className="text-base font-semibold text-foreground">
+              {en ? "AI providers" : "Proveedores de IA"}
+            </h2>
+            <Link
+              href="/teacher/ai-providers"
+              className="text-sm font-medium text-accent hover:underline"
+            >
+              {en ? "See all" : "Ver todos"}
+            </Link>
+          </div>
+
+          {recentProviders.length > 0 ? (
+            <ul className="flex flex-col gap-1">
+              {recentProviders.map((provider) => (
+                <li key={provider.id}>
+                  <Link
+                    href={`/teacher/ai-providers/${provider.id}`}
+                    className="-mx-2 flex items-center gap-3 rounded-lg px-2 py-2.5 transition-colors hover:bg-layer-hover"
+                  >
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent-soft text-accent-soft-foreground">
+                      <Sparkles className="h-4 w-4" aria-hidden="true" />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-foreground">
+                        {provider.providerName}
+                      </p>
+                      <p className="truncate text-xs text-muted">
+                        {AI_PROVIDER_TYPE_LABELS[provider.providerType]}
+                      </p>
+                    </div>
+                    <ProviderStatusBadge isActive={provider.isActive} />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          ) : !isRecentProvidersLoading ? (
+            <p className="rounded-xl border border-dashed border-border bg-surface-secondary/30 p-4 text-center text-sm text-muted">
+              {en
+                ? "No AI providers configured yet."
+                : "Todavía no hay proveedores de IA configurados."}
+            </p>
+          ) : null}
+        </motion.div>
       </div>
     </div>
   );

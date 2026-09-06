@@ -3,8 +3,8 @@
 import type { ReactElement } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button, Spinner } from "@heroui/react";
-import { Cpu } from "lucide-react";
+import { Cpu, Loader2, Plus, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { FormModal } from "@/components/ui/form-modal";
 import { SecretField } from "@/components/ui/secret-field";
 import { SelectField } from "@/components/ui/select-field";
@@ -139,20 +139,18 @@ export function CreateProviderModal({ trigger }: CreateProviderModalProps) {
             />
 
             <div className="mt-2 flex justify-end gap-2">
-              <Button variant="outline" type="button" onPress={close}>
+              <Button variant="outline" type="button" onClick={close}>
+                <X className="h-4 w-4" aria-hidden="true" />
                 {language === "en" ? "Cancel" : "Cancelar"}
               </Button>
-              <Button
-                type="submit"
-                variant="primary"
-                isDisabled={createProvider.isPending}
-              >
+              <Button type="submit" disabled={createProvider.isPending}>
                 {createProvider.isPending ? (
-                  <Spinner size="sm" />
-                ) : language === "en" ? (
-                  "Create provider"
+                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
                 ) : (
-                  "Crear proveedor"
+                  <>
+                    <Plus className="h-4 w-4" aria-hidden="true" />
+                    {language === "en" ? "Create provider" : "Crear proveedor"}
+                  </>
                 )}
               </Button>
             </div>

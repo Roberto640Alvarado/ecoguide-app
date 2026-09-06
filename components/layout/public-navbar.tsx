@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { Languages, LogOut } from "lucide-react";
 import { useLanguageStore } from "@/store/language-store";
 import { useAuthStore } from "@/store/auth-store";
@@ -45,6 +46,15 @@ export function PublicNavbar() {
         </Link>
 
         <div className="flex items-center gap-2 sm:gap-3">
+          <ThemeToggle
+            labelClassName="hidden sm:inline"
+            labels={
+              language === "en"
+                ? { light: "Light", dark: "Dark" }
+                : { light: "Claro", dark: "Oscuro" }
+            }
+          />
+
           <Button
             variant="ghost"
             size="sm"

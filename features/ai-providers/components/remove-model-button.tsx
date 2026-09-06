@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@heroui/react";
+import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useLanguageStore } from "@/store/language-store";
@@ -22,12 +22,9 @@ export function RemoveModelButton({
   return (
     <ConfirmDialog
       trigger={
-        <Button
-          variant="outline"
-          size="sm"
-          aria-label={language === "en" ? "Remove" : "Eliminar"}
-        >
+        <Button variant="outline" size="sm" className="rounded-full">
           <Trash2 className="h-4 w-4" aria-hidden="true" />
+          {language === "en" ? "Remove" : "Eliminar"}
         </Button>
       }
       title={language === "en" ? "Remove model?" : "¿Eliminar modelo?"}

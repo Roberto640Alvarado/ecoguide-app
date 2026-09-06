@@ -3,7 +3,9 @@
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AnimatePresence, motion } from "framer-motion";
-import { Button, Spinner, toast } from "@heroui/react";
+import { toast } from "@heroui/react";
+import { Loader2, Save, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { OptionsListField } from "@/components/ui/options-list-field";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { TextField } from "@/components/ui/text-field";
@@ -112,6 +114,11 @@ export function FlashCardForm({
     >
       <FormSection
         title={language === "en" ? "Content" : "Contenido"}
+        description={
+          language === "en"
+            ? "Choose the category, write the title, and the content the student will see."
+            : "Elige la categoría, escribe el título y el contenido que verá el estudiante."
+        }
       >
         <Controller
           control={control}
@@ -189,10 +196,15 @@ export function FlashCardForm({
             )}
           />
 
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-1.5">
             <label className="text-sm font-medium text-foreground">
               {language === "en" ? "Image" : "Imagen"}
             </label>
+            <p className="-mt-1 text-xs text-muted">
+              {language === "en"
+                ? "Upload an optional image for this card."
+                : "Carga una imagen opcional para esta tarjeta."}
+            </p>
             <FlashCardImageUploader
               image={image || undefined}
               onChange={(value) =>
@@ -213,6 +225,11 @@ export function FlashCardForm({
             language === "en"
               ? "Multiple choice quiz"
               : "Pregunta de opción múltiple"
+          }
+          description={
+            language === "en"
+              ? "Only for the Environmental category: write the question, the answer options, and mark which one is correct."
+              : "Solo para la categoría Ambiental: escribe la pregunta, las opciones de respuesta y marca cuál es la correcta."
           }
         >
           <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
@@ -277,12 +294,29 @@ export function FlashCardForm({
         </FormSection>
       )}
 
-      <div className="flex justify-end gap-2">
-        <Button variant="outline" type="button" onPress={onCancel}>
+      <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+        <Button
+          variant="outline"
+          type="button"
+          onClick={onCancel}
+          className="w-full sm:w-auto"
+        >
+          <X className="h-4 w-4" aria-hidden="true" />
           {language === "en" ? "Cancel" : "Cancelar"}
         </Button>
-        <Button type="submit" variant="primary" isDisabled={isSubmitting}>
-          {isSubmitting ? <Spinner size="sm" /> : submitLabel}
+        <Button
+          type="submit"
+          disabled={isSubmitting}
+          className="w-full sm:w-auto"
+        >
+          {isSubmitting ? (
+            <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+          ) : (
+            <>
+              <Save className="h-4 w-4" aria-hidden="true" />
+              {submitLabel}
+            </>
+          )}
         </Button>
       </div>
     </form>

@@ -7,7 +7,8 @@ import type { ColumnDef } from "@tanstack/react-table";
 import type { DriveStep } from "driver.js";
 import { Button } from "@/components/ui/button";
 import { ColumnFilter } from "@/components/ui/column-filter";
-import { Cpu, SquarePen } from "lucide-react";
+import { DateRangeFilter } from "@/components/ui/date-range-filter";
+import { Cpu, FilterX, Plus, SquarePen } from "lucide-react";
 import { useLanguageStore } from "@/store/language-store";
 import { PageHeader } from "@/components/layout/page-header";
 import { PageTourBanner } from "@/components/layout/page-tour-banner";
@@ -15,7 +16,6 @@ import { DataTable } from "@/components/ui/data-table";
 import { PaginationControls } from "@/components/ui/pagination-controls";
 import { usePageTour } from "@/hooks/use-page-tour";
 import { useAIProviders } from "@/features/ai-providers/hooks/use-ai-providers";
-import { ProviderStatusBadge } from "@/features/ai-providers/components/provider-status-badge";
 import { CreateProviderModal } from "@/features/ai-providers/components/create-provider-modal";
 import { EditProviderModal } from "@/features/ai-providers/components/edit-provider-modal";
 import { ProviderStatusToggle } from "@/features/ai-providers/components/provider-status-toggle";
@@ -40,6 +40,20 @@ export default function TeacherAIProvidersPage() {
     "status",
     parseAsString.withDefault(""),
   );
+  const [dateRange, setDateRange] = useQueryState(
+    "created",
+    parseAsString.withDefault(""),
+  );
+
+  const [createdFrom, createdTo] = dateRange.split("_");
+  const hasActiveFilters = search !== "" || status !== "" || dateRange !== "";
+
+  function handleClearFilters() {
+    setSearch("");
+    setStatus("");
+    setDateRange("");
+    setPage(1);
+  }
 
   const { data, isLoading } = useAIProviders({
     page,
@@ -47,6 +61,8 @@ export default function TeacherAIProvidersPage() {
     search: search || undefined,
     sort: SORT,
     isActive: status === "" ? undefined : status === "active",
+    createdFrom: createdFrom || undefined,
+    createdTo: createdTo || undefined,
   });
 
   const tourSteps = useMemo<DriveStep[]>(() => {
@@ -83,6 +99,16 @@ export default function TeacherAIProvidersPage() {
             language === "en"
               ? "Show only active providers or only inactive ones."
               : "Muestra solo proveedores activos o solo inactivos.",
+        },
+      },
+      {
+        element: '[data-tour="filter-date"]',
+        popover: {
+          title: language === "en" ? "Filter by date" : "Filtrar por fecha",
+          description:
+            language === "en"
+              ? "Narrow the list down to a creation date range."
+              : "Reduce la lista a un rango de fechas de creación.",
         },
       },
       {
@@ -181,9 +207,7 @@ export default function TeacherAIProvidersPage() {
           />
         </div>
       ),
-      cell: ({ row }) => (
-        <ProviderStatusBadge isActive={row.original.isActive} />
-      ),
+      cell: ({ row }) => <ProviderStatusToggle provider={row.original} />,
     },
     {
       id: "createdAt",
@@ -198,7 +222,7 @@ export default function TeacherAIProvidersPage() {
       id: "actions",
       header: language === "en" ? "Actions" : "Acciones",
       cell: ({ row }) => (
-        <div className="flex flex-wrap items-center justify-end gap-3">
+        <div className="flex items-center justify-center">
           <EditProviderModal
             provider={row.original}
             trigger={
@@ -208,7 +232,6 @@ export default function TeacherAIProvidersPage() {
               </Button>
             }
           />
-          <ProviderStatusToggle provider={row.original} />
         </div>
       ),
     },
@@ -229,22 +252,12 @@ export default function TeacherAIProvidersPage() {
         }
         description={
           language === "en"
-            ? "Search providers, filter by status, and add a new one."
-            : "Busca proveedores, fíltralos por estado y agrega uno nuevo."
+            ? "Search providers, filter by status or creation date, and add a new one."
+            : "Busca proveedores, fíltralos por estado o fecha de creación, y agrega uno nuevo."
         }
         buttonLabel={language === "en" ? "Take the tour" : "Ver tour guiado"}
         onStart={startTour}
       />
-
-      <div className="flex justify-end">
-        <CreateProviderModal
-          trigger={
-            <Button data-tour="action">
-              {language === "en" ? "New provider" : "Nuevo proveedor"}
-            </Button>
-          }
-        />
-      </div>
 
       <div data-tour="table">
         <DataTable
@@ -257,6 +270,47 @@ export default function TeacherAIProvidersPage() {
               : "No se encontraron proveedores."
           }
           onRowClick={(row) => router.push(`/teacher/ai-providers/${row.id}`)}
+          interactiveColumnIds={["actions", "isActive"]}
+          toolbar={
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+                <DateRangeFilter
+                  data-tour="filter-date"
+                  value={dateRange}
+                  onApply={(value) => {
+                    setDateRange(value);
+                    setPage(1);
+                  }}
+                  placeholder={
+                    language === "en" ? "Created date" : "Fecha de creación"
+                  }
+                  popoverTitle={
+                    language === "en" ? "Created date" : "Fecha de creación"
+                  }
+                  clearLabel={language === "en" ? "Clear" : "Limpiar"}
+                  applyLabel={language === "en" ? "Apply" : "Aplicar"}
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleClearFilters}
+                  disabled={!hasActiveFilters}
+                  className="w-full sm:w-auto"
+                >
+                  <FilterX className="h-4 w-4" aria-hidden="true" />
+                  {language === "en" ? "Clear filters" : "Limpiar filtros"}
+                </Button>
+              </div>
+              <CreateProviderModal
+                trigger={
+                  <Button data-tour="action" className="w-full sm:w-auto">
+                    <Plus className="h-4 w-4" aria-hidden="true" />
+                    {language === "en" ? "New provider" : "Nuevo proveedor"}
+                  </Button>
+                }
+              />
+            </div>
+          }
           footer={
             data && <PaginationControls meta={data.meta} onPageChange={setPage} />
           }

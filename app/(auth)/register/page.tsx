@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button, Spinner } from "@heroui/react";
-import { Mail, User, UserPlus } from "lucide-react";
+import { Loader2, Mail, User, UserPlus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useLanguageStore } from "@/store/language-store";
 import { authContent } from "@/lib/i18n/auth-content";
 import { useRegister } from "@/features/auth/hooks/use-register";
@@ -174,18 +174,19 @@ export default function RegisterPage() {
 
         <Button
           type="submit"
-          variant="primary"
-          fullWidth
-          isDisabled={register.isPending}
-          className="mt-2"
+          disabled={register.isPending}
+          className="mt-2 w-full"
         >
           {register.isPending ? (
             <>
-              <Spinner size="sm" />
+              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
               {t.submitting}
             </>
           ) : (
-            t.submit
+            <>
+              <UserPlus className="h-4 w-4" aria-hidden="true" />
+              {t.submit}
+            </>
           )}
         </Button>
       </form>

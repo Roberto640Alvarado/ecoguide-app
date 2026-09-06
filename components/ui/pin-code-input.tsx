@@ -82,7 +82,6 @@ export function PinCodeInput({
               ? "border-danger focus:border-danger focus:ring-danger"
               : "border-layer-line focus:border-primary-focus focus:ring-primary-focus"
           }`}
-          placeholder="⚬"
           data-hs-pin-input-item
         />
       ))}

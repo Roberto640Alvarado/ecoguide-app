@@ -17,4 +17,8 @@ export interface FindUsersParams {
   search?: string;
   sort?: string;
   role?: UserRole;
+  isActive?: boolean;
+  /** Filtra por fecha de registro (createdAt), formato yyyy-MM-dd, inclusive. */
+  createdFrom?: string;
+  createdTo?: string;
 }

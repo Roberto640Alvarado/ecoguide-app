@@ -2,7 +2,9 @@
 
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button, Spinner, toast } from "@heroui/react";
+import { toast } from "@heroui/react";
+import { Loader2, Save, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { TextField } from "@/components/ui/text-field";
 import { TextareaField } from "@/components/ui/textarea-field";
 import { useLanguageStore } from "@/store/language-store";
@@ -83,7 +85,14 @@ export function BadgeForm({
       className="flex flex-col gap-5"
       noValidate
     >
-      <FormSection title={language === "en" ? "Badge" : "Insignia"}>
+      <FormSection
+        title={language === "en" ? "Badge" : "Insignia"}
+        description={
+          language === "en"
+            ? "Enter the name, description, and the message the student will see when they earn it."
+            : "Ingresa el nombre, la descripción y el mensaje que verá el estudiante al ganarla."
+        }
+      >
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-[3fr_2fr] lg:items-start">
           <div className="flex flex-col gap-5">
             <Controller
@@ -122,10 +131,15 @@ export function BadgeForm({
             />
           </div>
 
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-1.5">
             <label className="text-sm font-medium text-foreground">
               {language === "en" ? "Image (PNG)" : "Imagen (PNG)"}
             </label>
+            <p className="-mt-1 text-xs text-muted">
+              {language === "en"
+                ? "Upload the PNG image for this badge."
+                : "Carga la imagen PNG de esta insignia."}
+            </p>
             <BadgeImageUploader
               image={imageUrl || undefined}
               onChange={(value) =>
@@ -162,12 +176,29 @@ export function BadgeForm({
         />
       </FormSection>
 
-      <div className="flex justify-end gap-2">
-        <Button variant="outline" type="button" onPress={onCancel}>
+      <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+        <Button
+          variant="outline"
+          type="button"
+          onClick={onCancel}
+          className="w-full sm:w-auto"
+        >
+          <X className="h-4 w-4" aria-hidden="true" />
           {language === "en" ? "Cancel" : "Cancelar"}
         </Button>
-        <Button type="submit" variant="primary" isDisabled={isSubmitting}>
-          {isSubmitting ? <Spinner size="sm" /> : submitLabel}
+        <Button
+          type="submit"
+          disabled={isSubmitting}
+          className="w-full sm:w-auto"
+        >
+          {isSubmitting ? (
+            <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+          ) : (
+            <>
+              <Save className="h-4 w-4" aria-hidden="true" />
+              {submitLabel}
+            </>
+          )}
         </Button>
       </div>
     </form>

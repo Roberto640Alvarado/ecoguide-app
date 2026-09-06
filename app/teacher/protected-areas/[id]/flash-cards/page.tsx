@@ -6,8 +6,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { parseAsInteger, parseAsString, useQueryState } from "nuqs";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Button } from "@heroui/react";
-import { ArrowLeft, BookOpen, ImageOff, Search, SquarePen } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft, BookOpen, ImageOff, Plus, Search, SquarePen } from "lucide-react";
 import { useLanguageStore } from "@/store/language-store";
 import { stripHtmlToText } from "@/lib/utils/rich-text";
 import { DataTable } from "@/components/ui/data-table";
@@ -121,12 +121,9 @@ export default function TeacherFlashCardsPage() {
           <Link
             href={`/teacher/protected-areas/${params.id}/flash-cards/${row.original.id}/edit`}
           >
-            <Button
-              variant="outline"
-              size="sm"
-              aria-label={language === "en" ? "Edit" : "Editar"}
-            >
+            <Button variant="outline" size="sm">
               <SquarePen className="h-4 w-4" aria-hidden="true" />
+              {language === "en" ? "Edit" : "Editar"}
             </Button>
           </Link>
           <RemoveFlashCardButton
@@ -165,7 +162,8 @@ export default function TeacherFlashCardsPage() {
           </div>
         </div>
         <Link href={`/teacher/protected-areas/${params.id}/flash-cards/new`}>
-          <Button variant="primary">
+          <Button className="rounded-full">
+            <Plus className="h-4 w-4" aria-hidden="true" />
             {language === "en" ? "New flashcard" : "Nueva flashcard"}
           </Button>
         </Link>

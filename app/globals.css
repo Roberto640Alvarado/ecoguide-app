@@ -103,6 +103,10 @@
   --color-layer-hover: var(--surface-hover);
   --color-layer-focus: var(--surface-hover);
 
+  /* Alias directo para el hover neutro de botones outline/ghost (ver
+     components/ui/button.tsx) — mismo valor calculado que layer-hover. */
+  --color-surface-hover: var(--surface-hover);
+
   --color-secondary: var(--surface-secondary);
   --color-secondary-foreground: var(--surface-secondary-foreground);
   --color-secondary-line: var(--border);
@@ -122,6 +126,7 @@
   --color-line-2: var(--border);
   --color-primary: var(--accent);
   --color-primary-foreground: var(--accent-foreground);
+  --color-primary-hover: var(--accent-hover);
 
   /* Usados por los campos de formulario estilo Preline (input, textarea,
      strong-password, pin-input, copy-markup) */
@@ -142,6 +147,7 @@
   --color-muted-foreground: var(--muted);
   --color-destructive: var(--danger);
   --color-destructive-foreground: var(--danger-foreground);
+  --color-destructive-hover: var(--danger-hover);
   --color-input: var(--field-border);
   --color-ring: var(--accent);
 

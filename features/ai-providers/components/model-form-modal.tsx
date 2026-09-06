@@ -3,8 +3,8 @@
 import type { ReactElement } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button, Spinner } from "@heroui/react";
-import { Sparkles } from "lucide-react";
+import { Loader2, Plus, Save, Sparkles, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { FormModal } from "@/components/ui/form-modal";
 import { TextField } from "@/components/ui/text-field";
 import { ToggleField } from "@/components/ui/toggle-field";
@@ -126,26 +126,23 @@ export function ModelFormModal({
             />
 
             <div className="mt-2 flex justify-end gap-2">
-              <Button variant="outline" type="button" onPress={close}>
+              <Button variant="outline" type="button" onClick={close}>
+                <X className="h-4 w-4" aria-hidden="true" />
                 {language === "en" ? "Cancel" : "Cancelar"}
               </Button>
-              <Button
-                type="submit"
-                variant="primary"
-                isDisabled={mutation.isPending}
-              >
+              <Button type="submit" disabled={mutation.isPending}>
                 {mutation.isPending ? (
-                  <Spinner size="sm" />
+                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
                 ) : isEdit ? (
-                  language === "en" ? (
-                    "Save"
-                  ) : (
-                    "Guardar"
-                  )
-                ) : language === "en" ? (
-                  "Add"
+                  <>
+                    <Save className="h-4 w-4" aria-hidden="true" />
+                    {language === "en" ? "Save" : "Guardar"}
+                  </>
                 ) : (
-                  "Agregar"
+                  <>
+                    <Plus className="h-4 w-4" aria-hidden="true" />
+                    {language === "en" ? "Add" : "Agregar"}
+                  </>
                 )}
               </Button>
             </div>

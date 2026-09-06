@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
-import { Button, Spinner } from "@heroui/react";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, KeyRound, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useLanguageStore } from "@/store/language-store";
 import { authContent } from "@/lib/i18n/auth-content";
 import { useResetPassword } from "@/features/auth/hooks/use-reset-password";
@@ -52,7 +52,7 @@ export default function ResetPasswordPage() {
         </span>
         <h1 className="text-xl font-bold text-foreground">{t.title}</h1>
         <p className="text-sm text-muted">{t.success}</p>
-        <Button variant="primary" onPress={() => router.push("/login")}>
+        <Button onClick={() => router.push("/login")}>
           {t.backToLogin}
         </Button>
       </motion.div>
@@ -137,17 +137,19 @@ export default function ResetPasswordPage() {
 
         <Button
           type="submit"
-          variant="primary"
-          fullWidth
-          isDisabled={resetPassword.isPending}
+          disabled={resetPassword.isPending}
+          className="w-full"
         >
           {resetPassword.isPending ? (
             <>
-              <Spinner size="sm" />
+              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
               {t.submitting}
             </>
           ) : (
-            t.submit
+            <>
+              <KeyRound className="h-4 w-4" aria-hidden="true" />
+              {t.submit}
+            </>
           )}
         </Button>
       </form>

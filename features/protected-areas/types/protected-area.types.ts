@@ -17,4 +17,8 @@ export interface FindProtectedAreasParams {
   search?: string;
   sort?: string;
   isPublished?: boolean;
+  /** "yyyy-MM-dd". */
+  createdFrom?: string;
+  /** "yyyy-MM-dd". */
+  createdTo?: string;
 }
