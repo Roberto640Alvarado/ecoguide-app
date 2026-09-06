@@ -11,8 +11,10 @@ interface UsePageTourOptions {
   steps: DriveStep[];
   /** Identifica la página para la key de localStorage (ej. "teacher-users"). */
   storageKey: string;
-  /** Desactiva el auto-inicio la primera vez (el botón manual sigue
-   *  funcionando). Default: true. */
+  /** Activa el auto-inicio la primera vez que el usuario visita la
+   *  página (una sola vez por navegador, vía localStorage). El botón
+   *  manual "Ver tour guiado" siempre funciona sin importar este valor.
+   *  Default: false — el tour solo se muestra si el usuario hace clic. */
   autoStart?: boolean;
 }
 
@@ -35,15 +37,17 @@ function markTourSeen(key: string): void {
 
 // Wrapper de driver.js compartido por las vistas de listado de docente
 // (Users, Protected Areas, AI Providers): cada página define sus propios
-// `steps` apuntando a elementos vía `data-tour="..."`. El tour se
-// autoreproduce una sola vez por navegador (localStorage) y siempre puede
-// volver a lanzarse manualmente (botón "?" en el toolbar de cada página).
+// `steps` apuntando a elementos vía `data-tour="..."`. Por defecto el tour
+// es 100% manual: solo se lanza cuando el usuario hace clic en "Ver tour
+// guiado" (botón "?" en el toolbar de cada página). El auto-inicio al
+// entrar por primera vez es opt-in vía `autoStart: true` si alguna página
+// lo necesita más adelante.
 // Ver CLAUDE.md, sección "Sistema de Diseño", y el theming en
 // app/globals.css (`.ecoguide-tour-popover`).
 export function usePageTour({
   steps,
   storageKey,
-  autoStart = true,
+  autoStart = false,
 }: UsePageTourOptions) {
   const language = useLanguageStore((state) => state.language);
   const hasAutoStartedRef = useRef(false);
