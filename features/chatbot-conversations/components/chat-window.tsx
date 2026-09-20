@@ -2,8 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Button, Spinner, toast } from "@heroui/react";
-import { CheckCheck, Flag, Send, Sparkles } from "lucide-react";
+import { CheckCheck, Flag, Send } from "lucide-react";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { EcoGuideAvatar } from "@/components/ui/eco-guide-avatar";
 import { useLanguageStore } from "@/store/language-store";
 import { useTranslatedText } from "@/features/translation/hooks/use-translated-texts";
 import { useSendMessage } from "../hooks/use-send-message";
@@ -94,8 +95,14 @@ export function ChatWindow({
     <div className="flex h-[32rem] flex-col overflow-hidden rounded-2xl border border-border bg-surface sm:h-[36rem]">
       <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
         <div className="flex items-center gap-2">
-          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-accent text-accent-foreground">
-            <Sparkles className="h-4 w-4" aria-hidden="true" />
+          <span className="relative shrink-0">
+            <EcoGuideAvatar size={40} className="h-10 w-10" priority />
+            {!isFinished && (
+              <span
+                className="absolute bottom-0 right-0 flex h-3 w-3 items-center justify-center rounded-full border-2 border-surface bg-success"
+                aria-hidden="true"
+              />
+            )}
           </span>
           <div>
             <p className="text-sm font-semibold text-foreground">EcoGuía</p>

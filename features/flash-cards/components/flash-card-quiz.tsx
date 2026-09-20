@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { Check, X } from "lucide-react";
 import { useLanguageStore } from "@/store/language-store";
 import { useTranslatedTexts } from "@/features/translation/hooks/use-translated-texts";
@@ -64,27 +64,43 @@ export function FlashCardQuiz({ card }: FlashCardQuizProps) {
           }
 
           return (
-            <button
+            <motion.button
               key={option}
               type="button"
               disabled={hasAnswered}
               onClick={() => setSelected(option)}
+              whileHover={!hasAnswered ? { x: 3 } : undefined}
+              whileTap={!hasAnswered ? { scale: 0.98 } : undefined}
               className={`flex items-center justify-between gap-2 rounded-xl border px-4 py-2.5 text-left text-sm font-medium text-foreground transition-colors disabled:cursor-default ${stateClasses}`}
             >
               {displayOption}
-              {hasAnswered && isTheCorrectAnswer && (
-                <Check
-                  className="h-4 w-4 shrink-0 text-success-soft-foreground"
-                  aria-hidden="true"
-                />
-              )}
-              {hasAnswered && isSelected && !isTheCorrectAnswer && (
-                <X
-                  className="h-4 w-4 shrink-0 text-danger-soft-foreground"
-                  aria-hidden="true"
-                />
-              )}
-            </button>
+              <AnimatePresence>
+                {hasAnswered && isTheCorrectAnswer && (
+                  <motion.span
+                    initial={{ opacity: 0, scale: 0.5 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="shrink-0"
+                  >
+                    <Check
+                      className="h-4 w-4 text-success-soft-foreground"
+                      aria-hidden="true"
+                    />
+                  </motion.span>
+                )}
+                {hasAnswered && isSelected && !isTheCorrectAnswer && (
+                  <motion.span
+                    initial={{ opacity: 0, scale: 0.5 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="shrink-0"
+                  >
+                    <X
+                      className="h-4 w-4 text-danger-soft-foreground"
+                      aria-hidden="true"
+                    />
+                  </motion.span>
+                )}
+              </AnimatePresence>
+            </motion.button>
           );
         })}
       </div>

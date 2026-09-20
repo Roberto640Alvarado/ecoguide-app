@@ -11,17 +11,33 @@ import { FLASH_CARD_TYPE_TONE, type FlashCard } from "../types/flash-card.types"
 
 interface FlashCardStudentCardProps {
   card: FlashCard;
+  /**
+   * Si esta es la tarjeta actualmente centrada en el mazo (ver
+   * FlashCardDeck). Como Embla monta todas las tarjetas del mazo a la vez
+   * (mismo patrón que FlashCardQuiz), este flag es lo que dispara el "pop"
+   * de entrada de la mascota y el contenido cada vez que el estudiante
+   * navega hacia esta tarjeta, en vez de animar una única vez al cargar la
+   * página.
+   */
+  isActive: boolean;
 }
 
 /**
- * Una tarjeta del mazo del estudiante: degradado de fondo según la
- * categoría (ver FLASH_CARD_TYPE_TONE) con la mascota "hablando" al lado
- * del contenido, en vez de encerrada en un círculo — el título y el texto
- * (o el quiz interactivo para ENVIRONMENTAL) viven dentro de una burbuja de
- * diálogo con una "colita" apuntando hacia el avatar, para reforzar que es
- * la mascota quien le explica la tarjeta al estudiante.
+ * Una tarjeta del mazo del estudiante, partida en dos paneles:
+ *
+ *  - Panel de la mascota (tono de la categoría): badge + gesto de la
+ *    mascota. A partir de `lg` va a la IZQUIERDA con ancho fijo; abajo de
+ *    `lg` se apila arriba, a todo el ancho.
+ *  - Panel de contenido (`surface`): título y texto (o el quiz de
+ *    ENVIRONMENTAL) + imagen opcional.
+ *
+ * El corte entre ambos paneles es un cambio de color plano, no un
+ * degradado que se desvanece hasta el fondo de la página — así el límite
+ * de la tarjeta se ve siempre, sin importar cuánto texto traiga.
+ * El layout horizontal aprovecha el ancho disponible en escritorio, que
+ * antes quedaba vacío a los lados con la tarjeta en una sola columna.
  */
-export function FlashCardStudentCard({ card }: FlashCardStudentCardProps) {
+export function FlashCardStudentCard({ card, isActive }: FlashCardStudentCardProps) {
   const theme = FLASH_CARD_TYPE_TONE[card.type];
   const isEnvironmental = card.type === "ENVIRONMENTAL";
   const [translatedTitle, translatedContent] = useTranslatedTexts([
@@ -30,65 +46,71 @@ export function FlashCardStudentCard({ card }: FlashCardStudentCardProps) {
   ]);
 
   return (
-    <div
-      className={`flex min-h-[26rem] w-full flex-col gap-5 overflow-y-auto rounded-3xl border border-border bg-gradient-to-br p-6 sm:p-8 ${theme.cardGradient}`}
-    >
-      <div className="flex justify-center sm:justify-start">
-        <FlashCardTypeBadge type={card.type} />
-      </div>
+    <div className="flex h-full min-h-[20rem] w-full flex-col overflow-hidden rounded-3xl border border-border bg-surface shadow-sm lg:flex-row">
+      <div
+        /* Alto fijo en mobile (h-56 = 224px): las flechas de navegación del
+           mazo se posicionan sobre esta franja con un offset fijo
+           (`top-28` en FlashCardDeck), así que su centro tiene que ser
+           predecible y no depender del largo del título ni del contenido.
+           Desde `lg` el panel pasa a ser la columna izquierda y el alto lo
+           define el contenido. */
+        className={`flex h-56 shrink-0 flex-col items-center justify-center gap-4 px-6 text-center lg:h-auto lg:w-72 lg:py-10 ${theme.chipBg}`}
+      >
+        <FlashCardTypeBadge type={card.type} variant="contrast" />
 
-      <div className="flex flex-1 flex-col items-center gap-4 sm:flex-row sm:items-start sm:gap-5">
         <motion.div
-          initial={{ opacity: 0, scale: 0.85, y: -8 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-          className="shrink-0"
+          animate={
+            isActive ? { opacity: 1, scale: 1 } : { opacity: 0.5, scale: 0.85 }
+          }
+          transition={{ type: "spring", stiffness: 260, damping: 18 }}
+          className="relative"
         >
+          <span
+            aria-hidden="true"
+            className="absolute inset-1 -z-10 rounded-full bg-surface/70 blur-2xl"
+          />
           <FlashCardAvatar
             type={card.type}
-            className="h-28 w-28 object-contain drop-shadow-md sm:h-36 sm:w-36"
+            className="h-28 w-28 object-contain drop-shadow-lg lg:h-36 lg:w-36"
           />
         </motion.div>
+      </div>
 
-        <div className="relative w-full rounded-2xl bg-surface p-5 text-center shadow-sm sm:flex-1 sm:text-left">
-          {/* Colita de la burbuja: arriba (apuntando al avatar) en móvil,
-              a la izquierda (apuntando al avatar) desde sm hacia arriba. */}
-          <span
-            aria-hidden="true"
-            className="absolute -top-2 left-1/2 h-4 w-4 -translate-x-1/2 rotate-45 bg-surface sm:hidden"
-          />
-          <span
-            aria-hidden="true"
-            className="absolute -left-2 top-8 hidden h-4 w-4 rotate-45 bg-surface sm:block"
-          />
+      <div className="flex min-w-0 flex-1 flex-col gap-4 overflow-y-auto overflow-x-hidden p-6 sm:p-8">
+        <motion.h2
+          animate={isActive ? { opacity: 1, y: 0 } : { opacity: 0.6, y: 4 }}
+          transition={{ duration: 0.3, delay: isActive ? 0.05 : 0 }}
+          className="text-xl font-bold text-foreground sm:text-2xl"
+        >
+          {translatedTitle}
+        </motion.h2>
 
-          <h2 className="text-lg font-bold text-foreground sm:text-xl">
-            {translatedTitle}
-          </h2>
-
-          <div className="mt-3">
-            {isEnvironmental ? (
-              <FlashCardQuiz card={card} />
-            ) : (
-              <div
-                className={`text-sm leading-relaxed text-muted sm:text-base ${richTextDisplayClassName}`}
-                dangerouslySetInnerHTML={{ __html: sanitizeRichText(translatedContent) }}
-              />
-            )}
-          </div>
+        <motion.div
+          animate={isActive ? { opacity: 1, y: 0 } : { opacity: 0.7, y: 6 }}
+          transition={{ duration: 0.3, delay: isActive ? 0.12 : 0 }}
+          className="flex min-w-0 flex-col gap-4"
+        >
+          {isEnvironmental ? (
+            <FlashCardQuiz card={card} />
+          ) : (
+            <div
+              className={`break-words text-sm leading-relaxed text-muted sm:text-base ${richTextDisplayClassName}`}
+              dangerouslySetInnerHTML={{ __html: sanitizeRichText(translatedContent) }}
+            />
+          )}
 
           {card.image && !isEnvironmental && (
-            <div className="relative mt-4 h-40 w-full overflow-hidden rounded-2xl sm:h-48">
+            <div className="relative h-44 w-full overflow-hidden rounded-2xl border border-border/60 shadow-sm sm:h-56">
               <Image
                 src={card.image}
                 alt=""
                 fill
-                sizes="600px"
+                sizes="(min-width: 1024px) 800px, 100vw"
                 className="object-cover"
               />
             </div>
           )}
-        </div>
+        </motion.div>
       </div>
     </div>
   );

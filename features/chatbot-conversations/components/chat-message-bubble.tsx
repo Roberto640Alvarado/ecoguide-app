@@ -1,5 +1,5 @@
-import { Bot } from "lucide-react";
 import { UserAvatar } from "@/components/ui/user-avatar";
+import { EcoGuideAvatar } from "@/components/ui/eco-guide-avatar";
 import { useTranslatedText } from "@/features/translation/hooks/use-translated-texts";
 import type { ChatMessage } from "../types/chatbot-conversation.types";
 
@@ -11,8 +11,9 @@ interface ChatMessageBubbleProps {
 
 /**
  * Burbuja de un chat real: el estudiante aparece con su propio avatar/nombre
- * (como en cualquier app de mensajería), el chatbot con un avatar de bot
- * genérico y el nombre "EcoGuía".
+ * (como en cualquier app de mensajería) y el chatbot con el avatar de la
+ * mascota EcoGuía (`EcoGuideAvatar`), el mismo personaje de la práctica de
+ * speaking y la landing — antes era un ícono genérico de robot.
  */
 export function ChatMessageBubble({
   message,
@@ -29,9 +30,7 @@ export function ChatMessageBubble({
       {isUser ? (
         <UserAvatar name={studentName} avatarUrl={studentAvatarUrl} size="sm" />
       ) : (
-        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent text-accent-foreground">
-          <Bot className="h-4 w-4" aria-hidden="true" />
-        </span>
+        <EcoGuideAvatar size={28} className="h-7 w-7" />
       )}
 
       <div

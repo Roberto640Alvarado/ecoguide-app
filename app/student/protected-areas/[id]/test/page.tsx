@@ -4,8 +4,7 @@ import { useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowLeft, ClipboardCheck, Lock } from "lucide-react";
-import { Spinner } from "@heroui/react";
+import { ArrowLeft, ClipboardCheck, Loader2, Lock } from "lucide-react";
 import { useLanguageStore } from "@/store/language-store";
 import { useProtectedArea } from "@/features/protected-areas/hooks/use-protected-area";
 import { useTestConfig } from "@/features/student-tests/hooks/use-test-config";
@@ -94,7 +93,10 @@ export default function StudentTestPage() {
 
       {isLoading ? (
         <div className="flex justify-center py-16">
-          <Spinner size="md" />
+          <Loader2
+            className="h-6 w-6 animate-spin text-muted-foreground"
+            aria-hidden="true"
+          />
         </div>
       ) : !area ? (
         <p className="text-center text-sm text-muted">

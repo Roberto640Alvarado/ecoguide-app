@@ -3,8 +3,7 @@
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Spinner } from "@heroui/react";
-import { ArrowLeft, BookOpen } from "lucide-react";
+import { ArrowLeft, BookOpen, Loader2 } from "lucide-react";
 import { useLanguageStore } from "@/store/language-store";
 import { useProtectedArea } from "@/features/protected-areas/hooks/use-protected-area";
 import { useFlashCards } from "@/features/flash-cards/hooks/use-flash-cards";
@@ -60,7 +59,10 @@ export default function StudentFlashCardsPage() {
 
       {isLoading ? (
         <div className="flex justify-center py-16">
-          <Spinner size="md" />
+          <Loader2
+            className="h-6 w-6 animate-spin text-muted-foreground"
+            aria-hidden="true"
+          />
         </div>
       ) : (
         <motion.div

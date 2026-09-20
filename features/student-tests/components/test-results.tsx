@@ -5,7 +5,7 @@ import Link from "next/link";
 import confetti from "canvas-confetti";
 import { motion } from "framer-motion";
 import { Award, Check, PartyPopper, RotateCcw, X } from "lucide-react";
-import { Button } from "@heroui/react";
+import { Button } from "@/components/ui/button";
 import { useLanguageStore } from "@/store/language-store";
 import { useTranslatedTexts } from "@/features/translation/hooks/use-translated-texts";
 import { useCheckAreaBadges } from "@/features/student-progress/hooks/use-check-area-badges";
@@ -181,11 +181,13 @@ export function TestResults({
   }, [showGrade, result.passed, protectedAreaId]);
 
   return (
-    <div className="flex flex-col gap-4">
-      <BadgeUnlockDialog
-        badge={justUnlocked[0] ?? null}
-        onClose={() => setJustUnlocked((prev) => prev.slice(1))}
-      />
+    <div className="mx-auto flex w-full max-w-4xl flex-col gap-4">
+      {justUnlocked.length > 0 && (
+        <BadgeUnlockDialog
+          badge={justUnlocked[0]}
+          onClose={() => setJustUnlocked((prev) => prev.slice(1))}
+        />
+      )}
 
       <div className="flex flex-col gap-2">
         {questions.slice(0, revealedCount).map((question, index) => {
@@ -226,7 +228,7 @@ export function TestResults({
             transition={
               result.passed
                 ? { duration: 0.7 }
-                : { duration: 1.2, repeat: Infinity, repeatDelay: 0.6 }
+                : { duration: 1.2, repeat: 3, repeatDelay: 0.6 }
             }
             className={`flex h-14 w-14 items-center justify-center rounded-full ${
               result.passed
@@ -282,7 +284,7 @@ export function TestResults({
 
           <div className="flex flex-wrap justify-center gap-2 pt-1">
             {attemptsRemaining > 0 && (
-              <Button variant="primary" onPress={onRetry} className="gap-1.5">
+              <Button onClick={onRetry} className="gap-1.5">
                 <RotateCcw className="h-4 w-4" aria-hidden="true" />
                 {result.passed
                   ? en

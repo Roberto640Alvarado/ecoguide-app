@@ -21,7 +21,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" suppressHydrationWarning className={openSans.variable}>
+    <html
+      lang="es"
+      suppressHydrationWarning
+      data-scroll-behavior="smooth"
+      className={openSans.variable}
+    >
       <body className="min-h-full flex flex-col bg-background text-foreground antialiased">
         <Providers>{children}</Providers>
         <PrelineScriptWrapper />
