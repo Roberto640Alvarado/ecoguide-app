@@ -67,7 +67,7 @@ export function ProtectedAreasMap({ areas }: ProtectedAreasMapProps) {
       boxZoom={false}
       keyboard={false}
       attributionControl={false}
-      className="h-72 w-full rounded-3xl border border-border sm:h-[26rem]"
+      className="isolate h-72 w-full rounded-3xl border border-border sm:h-[26rem]"
     >
       <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
       {areas.map((area) => (

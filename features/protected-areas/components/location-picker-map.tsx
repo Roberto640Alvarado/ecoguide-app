@@ -50,7 +50,7 @@ export function LocationPickerMap({
       center={[latitude, longitude]}
       zoom={9}
       scrollWheelZoom
-      className="h-80 w-full rounded-2xl border border-border"
+      className="isolate h-80 w-full rounded-2xl border border-border"
     >
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
