@@ -12,7 +12,8 @@ export interface SpeakingTurn {
  * ChatbotConversation — mismo patrón). `feedback`/`score` solo se llenan al
  * finalizar (`endedAt` deja de ser null); antes de eso viajan como null. Ya
  * no existe `audioUrl`/`transcription`: el audio de cada turno se transcribe
- * en el backend (Groq/Whisper) y se descarta, solo el texto queda guardado.
+ * en el backend (Whisper, vía Groq u OpenAI) y se descarta, solo el texto
+ * queda guardado.
  */
 export interface SpeakingResult {
   id: string;

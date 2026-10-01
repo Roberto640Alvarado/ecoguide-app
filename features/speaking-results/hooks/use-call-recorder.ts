@@ -16,7 +16,7 @@ interface UseCallRecorderResult {
 /**
  * Graba el turno del estudiante (solo MediaRecorder, sin Web Speech API): la
  * transcripción ya no ocurre en el navegador, se hace en el backend vía
- * Groq/Whisper (ver GroqTranscriptionService), así que este hook no necesita
+ * Whisper (ver AudioTranscriptionService), así que este hook no necesita
  * gatear la UI por soporte de SpeechRecognition — MediaRecorder +
  * getUserMedia están soportados en todos los navegadores modernos, incluido
  * Firefox (a diferencia del viejo useSpeechRecorder).

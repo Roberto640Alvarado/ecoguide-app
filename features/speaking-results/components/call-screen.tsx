@@ -36,7 +36,7 @@ function errorMessage(error: unknown, fallback: string): string {
  * habla (voces neuronales generadas en el backend, ver useSpeechAudio /
  * EdgeTtsService) y luego el estudiante graba su turno con el botón de
  * micrófono; al soltar/detener, el audio se envía al backend para
- * transcribirse (Groq/Whisper) y generar la siguiente respuesta de la IA en
+ * transcribirse (Whisper) y generar la siguiente respuesta de la IA en
  * un solo round trip (ver useSendSpeakingTurn). El botón de colgar finaliza
  * la llamada y dispara la retroalimentación final.
  */
