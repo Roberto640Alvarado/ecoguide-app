@@ -5,9 +5,12 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { Spinner } from "@heroui/react";
 import { MapPinned, Search } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import type { DriveStep } from "driver.js";
 import { parseAsString, useQueryState } from "nuqs";
 import { useLanguageStore } from "@/store/language-store";
+import { PageTourBanner } from "@/components/layout/page-tour-banner";
+import { usePageTour } from "@/hooks/use-page-tour";
 import { useProtectedAreas } from "@/features/protected-areas/hooks/use-protected-areas";
 import { useStudentProgressOverview } from "@/features/student-progress/hooks/use-student-progress-overview";
 import type { StudentAreaProgress } from "@/features/student-progress/types/student-progress.types";
@@ -72,6 +75,55 @@ export default function StudentProtectedAreasPage() {
       )
     : allAreas;
 
+  const en = language === "en";
+  const hasCards = !isLoading && filteredAreas.length > 0;
+
+  const tourSteps = useMemo<DriveStep[]>(() => {
+    if (isLoading) {
+      return [];
+    }
+
+    const steps: DriveStep[] = [
+      {
+        element: '[data-tour="map"]',
+        popover: {
+          title: en ? "Map of El Salvador" : "Mapa de El Salvador",
+          description: en
+            ? "Every pin is a protected area. On a computer, hover a pin to preview its photos and use \"Explore this area\"; on your phone, tap a pin to open the area."
+            : "Cada pin es un área protegida. En computadora, pasa el cursor sobre un pin para ver sus fotos y usa \"Explorar esta área\"; en el celular, toca un pin para abrir el área.",
+        },
+      },
+      {
+        element: '[data-tour="search"]',
+        popover: {
+          title: en ? "Search" : "Buscar",
+          description: en
+            ? "Type a name to filter the cards below. The map always shows every area."
+            : "Escribe un nombre para filtrar las tarjetas de abajo. El mapa siempre muestra todas las áreas.",
+        },
+      },
+    ];
+
+    if (hasCards) {
+      steps.push({
+        element: '[data-tour="cards"]',
+        popover: {
+          title: en ? "Your areas" : "Tus áreas",
+          description: en
+            ? "Each card shows your steps completed and a progress bar. Open one to start its path: flashcards, speaking, chatbot and test."
+            : "Cada tarjeta muestra tus pasos completados y una barra de avance. Abre una para empezar su ruta: flashcards, speaking, chatbot y examen.",
+        },
+      });
+    }
+
+    return steps;
+  }, [isLoading, hasCards, en]);
+
+  const { start: startTour } = usePageTour({
+    steps: tourSteps,
+    storageKey: "student-protected-areas",
+  });
+
   return (
     <div className="flex flex-col gap-6">
       <motion.div
@@ -95,7 +147,19 @@ export default function StudentProtectedAreasPage() {
         </div>
       </motion.div>
 
+      <PageTourBanner
+        title={en ? "New here? Take the tour" : "¿Primera vez aquí? Haz el tour"}
+        description={
+          en
+            ? "Learn how to use the map, search areas and start your learning path."
+            : "Aprende a usar el mapa, buscar áreas y empezar tu ruta de aprendizaje."
+        }
+        buttonLabel={en ? "Take the tour" : "Ver tour guiado"}
+        onStart={startTour}
+      />
+
       <motion.div
+        data-tour="map"
         initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.4, delay: 0.05 }}
@@ -103,7 +167,7 @@ export default function StudentProtectedAreasPage() {
         <ProtectedAreasMap areas={allAreas} />
       </motion.div>
 
-      <div className="relative w-full sm:max-w-xs">
+      <div data-tour="search" className="relative w-full sm:max-w-xs">
         <Search
           className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted"
           aria-hidden="true"
@@ -129,7 +193,7 @@ export default function StudentProtectedAreasPage() {
             : "No se encontraron áreas protegidas."}
         </div>
       ) : (
-        <>
+        <div data-tour="cards" className="flex flex-col gap-4">
           {/* Mobile: fila horizontal deslizable con scroll-snap. */}
           <div className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 sm:hidden">
             {filteredAreas.map((area, index) => (
@@ -155,7 +219,7 @@ export default function StudentProtectedAreasPage() {
               />
             ))}
           </div>
-        </>
+        </div>
       )}
     </div>
   );

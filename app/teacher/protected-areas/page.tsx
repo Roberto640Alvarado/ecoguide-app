@@ -86,12 +86,14 @@ export default function TeacherProtectedAreasPage() {
     createdTo: createdTo || undefined,
   });
 
+  const hasAreas = !isLoading && (data?.items.length ?? 0) > 0;
+
   const tourSteps = useMemo<DriveStep[]>(() => {
     if (isLoading) {
       return [];
     }
 
-    return [
+    const steps: DriveStep[] = [
       {
         element: '[data-tour="action"]',
         popover: {
@@ -133,17 +135,32 @@ export default function TeacherProtectedAreasPage() {
         },
       },
       {
+        element: '[data-tour="sort"]',
+        popover: {
+          title: language === "en" ? "Sort" : "Ordenar",
+          description:
+            language === "en"
+              ? "Sort by newest, oldest or name."
+              : "Ordena por más recientes, más antiguas o por nombre.",
+        },
+      },
+    ];
+
+    if (hasAreas) {
+      steps.push({
         element: '[data-tour="grid"]',
         popover: {
           title: language === "en" ? "Areas" : "Áreas",
           description:
             language === "en"
-              ? "Open \"Manage\" on any card to edit its content, or unpublish it."
-              : "Abre \"Manage\" en cualquier tarjeta para editar su contenido o despublicarla.",
+              ? "Use \"Manage\" on a card to edit its FlashCards, Speaking, Chatbot, Test, Badges or the area itself. Publish or unpublish it from the button on the card."
+              : "Usa \"Gestionar\" en una tarjeta para editar sus FlashCards, Speaking, Chatbot, Examen, Insignias o el área misma. Publícala o despublícala con el botón de la tarjeta.",
         },
-      },
-    ];
-  }, [isLoading, language]);
+      });
+    }
+
+    return steps;
+  }, [isLoading, hasAreas, language]);
 
   const { start: startTour } = usePageTour({
     steps: tourSteps,
@@ -165,8 +182,8 @@ export default function TeacherProtectedAreasPage() {
         }
         description={
           language === "en"
-            ? "Browse the list, filter by status, and create new protected areas."
-            : "Explora el listado, filtra por estado y crea nuevas áreas protegidas."
+            ? "Search, filter and sort your areas, manage their content and create new ones."
+            : "Busca, filtra y ordena tus áreas, gestiona su contenido y crea nuevas."
         }
         buttonLabel={language === "en" ? "Take the tour" : "Ver tour guiado"}
         onStart={startTour}
@@ -246,7 +263,7 @@ export default function TeacherProtectedAreasPage() {
                 setPage(1);
               }}
             >
-              <SelectTrigger className="w-full sm:w-44">
+              <SelectTrigger data-tour="sort" className="w-full sm:w-44">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

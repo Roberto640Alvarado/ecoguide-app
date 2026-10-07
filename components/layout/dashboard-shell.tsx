@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname } from "next/navigation";
+import { useEffect } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { Languages, LogOut, Loader2, type LucideIcon } from "lucide-react";
 import { useAuthStore } from "@/store/auth-store";
@@ -12,6 +12,8 @@ import { UserAvatar } from "@/components/ui/user-avatar";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { InstallAppButton } from "@/components/layout/install-app-button";
+import { BrandLogo, BrandWordmark } from "@/components/brand/brand-logo";
 import {
   PageTitleProvider,
   usePageTitleContext,
@@ -31,6 +33,7 @@ import {
   SidebarProvider,
   SidebarRail,
   SidebarTrigger,
+  useSidebar,
 } from "@/components/ui/sidebar";
 
 export interface DashboardNavItem {
@@ -53,8 +56,24 @@ interface DashboardShellProps {
 // <Sheet> (drawer), en escritorio como panel fijo colapsable a modo ícono
 // (`collapsible="icon"`). El estado (abierto/colapsado, mobile/desktop) lo
 // maneja el propio `SidebarProvider` — ya no hace falta `useState` local.
+// En móvil el sidebar es un drawer (<Sheet>) que no se cierra solo al
+// navegar: al cambiar de ruta (nav, perfil, logo, etc.) lo cerramos para que
+// no tape la vista nueva. En escritorio `openMobile` no se usa, así que es
+// inocuo.
+function CloseMobileSidebarOnNavigate() {
+  const pathname = usePathname();
+  const { setOpenMobile } = useSidebar();
+
+  useEffect(() => {
+    setOpenMobile(false);
+  }, [pathname, setOpenMobile]);
+
+  return null;
+}
+
 function NavList({ navItems }: { navItems: DashboardNavItem[] }) {
   const pathname = usePathname();
+  const { setOpenMobile } = useSidebar();
   const language = useLanguageStore((state) => state.language);
   const shouldReduceMotion = useReducedMotion();
 
@@ -83,7 +102,7 @@ function NavList({ navItems }: { navItems: DashboardNavItem[] }) {
                 </SidebarMenuButton>
               ) : (
                 <SidebarMenuButton asChild isActive={isActive} tooltip={item.label}>
-                  <Link href={item.href}>
+                  <Link href={item.href} onClick={() => setOpenMobile(false)}>
                     <Icon />
                     <span>{item.label}</span>
                   </Link>
@@ -123,15 +142,13 @@ function TopbarBrand({ dashboardHref }: { dashboardHref: string }) {
   }
 
   return (
-    <Link href={dashboardHref} className="flex items-center gap-2 md:hidden">
-      <Image
-        src="/logo.png"
-        alt="EcoGuide Training"
-        width={28}
-        height={28}
-        className="h-7 w-7 rounded-full"
-      />
-      <span className="font-semibold text-foreground">EcoGuide</span>
+    <Link
+      href={dashboardHref}
+      aria-label="EcoGuide Training"
+      className="flex items-center gap-2.5 rounded-md py-1 transition-opacity hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring md:hidden"
+    >
+      <BrandLogo className="h-8" />
+      <BrandWordmark className="text-lg text-foreground" />
     </Link>
   );
 }
@@ -170,22 +187,16 @@ export function DashboardShell({
   return (
     <PageTitleProvider>
       <SidebarProvider>
+        <CloseMobileSidebarOnNavigate />
         <Sidebar collapsible="icon">
           <SidebarHeader>
             <Link
               href={dashboardHref}
-              className="flex items-center gap-2 px-2 py-1 font-semibold text-lg text-sidebar-foreground focus:outline-hidden focus:opacity-80 group-data-[collapsible=icon]:justify-center"
+              aria-label="EcoGuide Training"
+              className="flex items-center gap-2.5 rounded-md px-2 py-1.5 text-sidebar-foreground transition-opacity hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sidebar-ring group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
             >
-              <Image
-                src="/logo.png"
-                alt="EcoGuide Training"
-                width={28}
-                height={28}
-                className="h-7 w-7 shrink-0 rounded-full"
-              />
-              <span className="group-data-[collapsible=icon]:hidden">
-                EcoGuide
-              </span>
+              <BrandLogo className="h-10 group-data-[collapsible=icon]:h-6" />
+              <BrandWordmark className="text-xl group-data-[collapsible=icon]:hidden" />
             </Link>
           </SidebarHeader>
 
@@ -236,6 +247,7 @@ export function DashboardShell({
                 }
               />
             </div>
+            <InstallAppButton />
             <Button
               variant="outline"
               size="sm"

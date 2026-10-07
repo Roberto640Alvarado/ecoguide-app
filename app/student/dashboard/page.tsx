@@ -6,15 +6,18 @@ import { motion } from "framer-motion";
 import {
   ArrowRight,
   Award,
+  BookOpen,
   CheckCircle2,
   Medal,
   MessagesSquare,
+  Mic,
   Sparkles,
   TrendingUp,
 } from "lucide-react";
 import { useAuthStore } from "@/store/auth-store";
 import { useLanguageStore } from "@/store/language-store";
 import { UserAvatar } from "@/components/ui/user-avatar";
+import { Button } from "@/components/ui/button";
 import { useStudentProgressOverview } from "@/features/student-progress/hooks/use-student-progress-overview";
 import { useAllEarnedBadges } from "@/features/student-progress/hooks/use-all-earned-badges";
 import { StudentProgressAreaCard } from "@/features/student-progress/components/student-progress-area-card";
@@ -59,6 +62,32 @@ function StatCard({ icon: Icon, label, value, accent, delay }: StatCardProps) {
   );
 }
 
+interface CapabilityCardProps {
+  icon: typeof MessagesSquare;
+  title: string;
+  description: string;
+  delay: number;
+}
+
+function CapabilityCard({ icon: Icon, title, description, delay }: CapabilityCardProps) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay }}
+      className="flex flex-col gap-3 rounded-2xl border border-border bg-surface-secondary/30 p-5"
+    >
+      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent-soft text-accent-soft-foreground">
+        <Icon className="h-5 w-5" aria-hidden="true" />
+      </span>
+      <div>
+        <p className="font-semibold text-foreground">{title}</p>
+        <p className="mt-1 text-sm text-muted">{description}</p>
+      </div>
+    </motion.div>
+  );
+}
+
 export default function StudentDashboardPage() {
   const user = useAuthStore((state) => state.user);
   const language = useLanguageStore((state) => state.language);
@@ -89,6 +118,25 @@ export default function StudentDashboardPage() {
       return b.progressPercent - a.progressPercent;
     })
     .slice(0, 4);
+
+  // CTA de la nueva sección "todo lo que puedes hacer": si el estudiante ya
+  // tiene un área en progreso, lo manda directo a continuar su recorrido
+  // (tour, que es quien controla el orden flashcards -> speaking -> chatbot
+  // -> test); si no ha empezado ninguna, lo manda a elegir un área.
+  const primaryContinueItem = continueItems[0];
+  // Fondo del hero: la foto de portada de un área protegida ya cargada en el
+  // sistema (la primera, en orden de "continuar", que tenga imagen).
+  const heroImage = continueItems.find((item) => item.areaImage)?.areaImage ?? null;
+  const capabilitiesCtaHref = primaryContinueItem
+    ? `/student/protected-areas/${primaryContinueItem.protectedAreaId}/tour`
+    : "/student/protected-areas";
+  const capabilitiesCtaLabel = primaryContinueItem
+    ? en
+      ? `Continue: ${primaryContinueItem.areaName}`
+      : `Continuar: ${primaryContinueItem.areaName}`
+    : en
+      ? "Explore protected areas"
+      : "Explorar áreas protegidas";
 
   return (
     <div className="flex flex-col gap-8">
@@ -122,6 +170,90 @@ export default function StudentDashboardPage() {
           {en ? "View full progress" : "Ver avance completo"}
           <ArrowRight className="h-4 w-4" aria-hidden="true" />
         </Link>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.05 }}
+        className="overflow-hidden rounded-3xl border border-border bg-surface"
+      >
+        <div className="relative isolate overflow-hidden bg-accent-soft">
+          {heroImage && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={heroImage}
+              alt=""
+              aria-hidden="true"
+              className="absolute inset-0 -z-20 h-full w-full object-cover sm:left-[35%] sm:w-[65%]"
+            />
+          )}
+          <div
+            aria-hidden="true"
+            className="absolute inset-0 -z-10 bg-gradient-to-b from-surface/95 via-surface/80 to-surface/40 sm:bg-gradient-to-r sm:from-surface sm:from-40% sm:via-surface/70 sm:via-55% sm:to-transparent"
+          />
+          <div className="relative flex flex-col items-start gap-5 p-6 pb-24 sm:max-w-[60%] sm:p-8 sm:pb-28">
+            <div className="max-w-xl">
+            <h2 className="text-xl font-bold text-foreground sm:text-2xl">
+              {en
+                ? "Everything you can do in EcoGuide"
+                : "Todo lo que puedes hacer en EcoGuide"}
+            </h2>
+            <p className="mt-2 text-sm text-muted sm:text-base">
+              {en
+                ? "Explore protected areas, chat in English with an AI guide, practice your pronunciation, and learn key vocabulary along the way."
+                : "Explora áreas protegidas, conversa en inglés con un guía de IA, practica tu pronunciación y aprende vocabulario clave en el camino."}
+            </p>
+            </div>
+            <Button asChild size="lg">
+              <Link href={capabilitiesCtaHref}>
+                {capabilitiesCtaLabel}
+                <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              </Link>
+            </Button>
+          </div>
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 1440 120"
+            preserveAspectRatio="none"
+            className="absolute inset-x-0 bottom-[-1px] h-14 w-full fill-current text-surface sm:h-20"
+          >
+            <path d="M0 70 C 240 130 480 20 760 50 C 1040 80 1240 130 1440 60 L1440 120 L0 120 Z" />
+          </svg>
+        </div>
+
+        <div className="grid gap-4 px-6 pb-6 sm:grid-cols-3 sm:px-8 sm:pb-8">
+          <CapabilityCard
+            icon={MessagesSquare}
+            title={en ? "Practice real conversations" : "Practica conversaciones reales"}
+            description={
+              en
+                ? "Chat in English with an AI guide about each protected area."
+                : "Conversa en inglés con un guía de IA sobre cada área protegida."
+            }
+            delay={0.1}
+          />
+          <CapabilityCard
+            icon={BookOpen}
+            title={en ? "Learn with flashcards" : "Aprende con flashcards"}
+            description={
+              en
+                ? "Review the key vocabulary before each tour."
+                : "Repasa el vocabulario clave antes de cada recorrido."
+            }
+            delay={0.15}
+          />
+          <CapabilityCard
+            icon={Mic}
+            title={en ? "Improve your speaking" : "Mejora tu speaking"}
+            description={
+              en
+                ? "Record yourself and get instant feedback from the AI."
+                : "Grábate y recibe retroalimentación instantánea de la IA."
+            }
+            delay={0.2}
+          />
+        </div>
       </motion.div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">

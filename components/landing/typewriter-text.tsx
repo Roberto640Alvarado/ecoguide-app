@@ -10,6 +10,14 @@ interface TypewriterTextProps {
   className?: string;
   onDone?: () => void;
   showCursor?: boolean;
+  /**
+   * Reserva desde el primer render el espacio del texto completo (lo pinta
+   * invisible y superpone el texto parcial encima). Sin esto el contenedor
+   * crece línea por línea mientras se escribe, y todo lo que dependa de su
+   * altura (ej. la foto del hero con object-cover) se reescala. Requiere que
+   * el elemento sea `block` (pasar `className="block"`).
+   */
+  reserveSpace?: boolean;
 }
 
 // Animación de "escritura": revela `text` letra por letra cada vez que el
@@ -29,6 +37,7 @@ export function TypewriterText({
   className,
   onDone,
   showCursor = true,
+  reserveSpace = false,
 }: TypewriterTextProps) {
   const ref = useRef<HTMLSpanElement>(null);
   const isInView = useInView(ref, { once: false, amount: 0.6 });
@@ -76,8 +85,19 @@ export function TypewriterText({
   const done = charCount >= text.length;
 
   return (
-    <span ref={ref} className={className}>
-      <span aria-hidden="true">
+    <span
+      ref={ref}
+      className={`${reserveSpace ? "relative " : ""}${className ?? ""}`}
+    >
+      {reserveSpace && (
+        <span aria-hidden="true" className="invisible">
+          {text}
+        </span>
+      )}
+      <span
+        aria-hidden="true"
+        className={reserveSpace ? "absolute inset-0" : undefined}
+      >
         {displayed}
         {showCursor && !done && charCount > 0 && (
           <span

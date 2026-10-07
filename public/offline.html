@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#09814a" />
+    <title>EcoGuide Training</title>
+    <style>
+      :root {
+        --bg: #fdfffc;
+        --fg: #011627;
+        --muted: #84828f;
+        --accent: #09814a;
+        --accent-fg: #fdfffc;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #011627;
+          --fg: #fdfffc;
+          --muted: #a9a7b3;
+          --accent: #4aa87c;
+          --accent-fg: #011627;
+        }
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        background: var(--bg);
+        color: var(--fg);
+        font-family: "Open Sans", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+        text-align: center;
+      }
+      main { max-width: 22rem; }
+      img { display: block; margin: 0 auto; width: auto; height: 104px; }
+      h1 { margin: 20px 0 8px; font-size: 1.5rem; }
+      p { margin: 0 0 24px; color: var(--muted); line-height: 1.5; }
+      button {
+        border: 0;
+        border-radius: 9999px;
+        padding: 12px 28px;
+        font: inherit;
+        font-weight: 600;
+        background: var(--accent);
+        color: var(--accent-fg);
+        cursor: pointer;
+      }
+      button:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <img src="/logo.svg" alt="EcoGuide" width="124" height="104" />
+      <h1 id="title">Sin conexión</h1>
+      <p id="text">
+        No pudimos conectarnos a internet. Revisa tu conexión e inténtalo de
+        nuevo.
+      </p>
+      <button id="retry" type="button">Reintentar</button>
+    </main>
+    <script>
+      if ((navigator.language || "").toLowerCase().indexOf("es") !== 0) {
+        document.documentElement.lang = "en";
+        document.getElementById("title").textContent = "You're offline";
+        document.getElementById("text").textContent =
+          "We couldn't reach the internet. Check your connection and try again.";
+        document.getElementById("retry").textContent = "Try again";
+      }
+      document.getElementById("retry").addEventListener("click", function () {
+        location.reload();
+      });
+      window.addEventListener("online", function () {
+        location.reload();
+      });
+    </script>
+  </body>
+</html>

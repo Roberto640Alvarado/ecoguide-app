@@ -45,7 +45,7 @@ export function StudentProgressOverview() {
       <BadgeUnlockWatcher
         protectedAreaIds={items.map((item) => item.protectedAreaId)}
       />
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div data-tour="progress-list" className="grid gap-4 lg:grid-cols-2">
         {items.map((progress, index) => (
           <StudentProgressAreaCard
             key={progress.protectedAreaId}

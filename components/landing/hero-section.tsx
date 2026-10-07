@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import {
   motion,
-  useMotionTemplate,
   useMotionValue,
   useSpring,
   useTransform,
@@ -81,65 +81,44 @@ export function HeroSection() {
   const language = useLanguageStore((state) => state.language);
   const t = landingContent[language].hero;
 
-  // Spotlight que sigue al cursor dentro de la sección (posición en px), y
-  // una versión normalizada (-0.5..0.5) que alimenta el parallax de los
-  // chips flotantes.
-  const spotlightX = useMotionValue(0);
-  const spotlightY = useMotionValue(0);
+  // Posición del cursor normalizada (-0.5..0.5) que alimenta el parallax de
+  // los chips flotantes.
   const mouseXNorm = useMotionValue(0);
   const mouseYNorm = useMotionValue(0);
   const springXN = useSpring(mouseXNorm, { stiffness: 100, damping: 22 });
   const springYN = useSpring(mouseYNorm, { stiffness: 100, damping: 22 });
-  const spotlightBackground = useMotionTemplate`radial-gradient(500px circle at ${spotlightX}px ${spotlightY}px, var(--accent-soft, rgba(9,129,74,0.16)), transparent 70%)`;
 
+  // Se normaliza contra el viewport (no contra el rect de la sección): al
+  // hacer scroll el navegador dispara un mousemove sintético y, con el rect,
+  // la posición "cambiaba" aunque el cursor no se moviera, moviendo los chips.
   function handleMouseMove(event: React.MouseEvent<HTMLElement>) {
-    const rect = event.currentTarget.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
-    spotlightX.set(x);
-    spotlightY.set(y);
-    mouseXNorm.set(x / rect.width - 0.5);
-    mouseYNorm.set(y / rect.height - 0.5);
+    mouseXNorm.set(event.clientX / window.innerWidth - 0.5);
+    mouseYNorm.set(event.clientY / window.innerHeight - 0.5);
   }
 
   return (
-    <section onMouseMove={handleMouseMove} className="relative overflow-hidden">
+    <section
+      onMouseMove={handleMouseMove}
+      className="relative isolate overflow-hidden"
+    >
+      {/* Foto de fondo (volcán de Santa Ana) + velo oscuro que se funde con
+          el fondo de la página al final, para que el texto blanco se lea
+          igual en modo claro y oscuro. */}
+      {/* Capa propia en GPU (transform-gpu): evita que el navegador vuelva a
+          rasterizar la foto cada vez que el navbar de cristal cambia de tono. */}
+      <div aria-hidden="true" className="absolute inset-0 -z-20 transform-gpu">
+        <Image
+          src="/hero-izalco.jpg"
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover object-center"
+        />
+      </div>
       <div
-        className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,_var(--accent-soft,rgba(34,153,84,0.12)),_transparent_60%)]"
         aria-hidden="true"
-      />
-
-      <motion.div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 -z-10"
-        style={{ background: spotlightBackground }}
-      />
-
-      <motion.div
-        aria-hidden="true"
-        className="pointer-events-none absolute -left-24 top-16 -z-10 h-72 w-72 rounded-full bg-accent-soft blur-3xl"
-        animate={{ y: [0, 20, 0], x: [0, 12, 0] }}
-        transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
-      />
-      <motion.div
-        aria-hidden="true"
-        className="pointer-events-none absolute -right-20 top-40 -z-10 h-64 w-64 rounded-full bg-accent-soft blur-3xl"
-        animate={{ y: [0, -16, 0], x: [0, -10, 0] }}
-        transition={{ duration: 11, repeat: Infinity, ease: "easeInOut" }}
-      />
-
-      {/* Anillos punteados decorativos ("orbit"), detrás del contenido */}
-      <motion.div
-        aria-hidden="true"
-        className="pointer-events-none absolute left-1/2 top-1/2 hidden h-[560px] w-[560px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-dashed border-accent/25 lg:block"
-        animate={{ rotate: 360 }}
-        transition={{ duration: 60, repeat: Infinity, ease: "linear" }}
-      />
-      <motion.div
-        aria-hidden="true"
-        className="pointer-events-none absolute left-1/2 top-1/2 hidden h-[380px] w-[380px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-dashed border-info/25 lg:block"
-        animate={{ rotate: -360 }}
-        transition={{ duration: 45, repeat: Infinity, ease: "linear" }}
+        className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-black/60 via-black/45 to-background"
       />
 
       {ORBIT_ICONS.map((chip) => (
@@ -155,12 +134,12 @@ export function HeroSection() {
         />
       ))}
 
-      <div className="relative mx-auto flex max-w-6xl flex-col items-center gap-6 px-4 py-24 text-center sm:px-6 lg:px-8 lg:py-32">
+      <div className="relative mx-auto flex max-w-6xl flex-col items-center gap-6 px-4 pb-24 pt-32 text-center sm:px-6 lg:px-8 lg:pb-32 lg:pt-40">
         <motion.span
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="rounded-full bg-accent-soft px-4 py-1.5 text-xs font-semibold tracking-wide text-accent-soft-foreground sm:text-sm"
+          className="rounded-full border border-white/25 bg-white/15 px-4 py-1.5 text-xs font-semibold tracking-wide text-white backdrop-blur-sm sm:text-sm"
         >
           {t.badge}
         </motion.span>
@@ -169,16 +148,22 @@ export function HeroSection() {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.1 }}
-          className="max-w-3xl text-4xl font-bold tracking-tight text-foreground sm:text-5xl lg:text-6xl"
+          className="max-w-3xl text-4xl font-bold tracking-tight text-white drop-shadow-md sm:text-5xl lg:text-6xl"
         >
-          <TypewriterText text={t.title} delay={450} speed={26} />
+          <TypewriterText
+            text={t.title}
+            delay={450}
+            speed={26}
+            className="block"
+            reserveSpace
+          />
         </motion.h1>
 
         <motion.p
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.55, delay: 0.2 }}
-          className="max-w-2xl text-base text-muted sm:text-lg"
+          className="max-w-2xl text-base text-white/85 drop-shadow sm:text-lg"
         >
           {t.subtitle}
         </motion.p>
@@ -202,7 +187,7 @@ export function HeroSection() {
         <motion.div
           animate={{ y: [0, 6, 0] }}
           transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
-          className="mt-6 text-muted"
+          className="mt-6 text-white/70"
           aria-hidden="true"
         >
           <ChevronDown className="h-6 w-6" />

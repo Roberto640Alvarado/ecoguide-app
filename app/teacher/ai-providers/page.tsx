@@ -117,8 +117,8 @@ export default function TeacherAIProvidersPage() {
           title: language === "en" ? "Providers" : "Proveedores",
           description:
             language === "en"
-              ? "Click a row to see its models, edit its configuration, or toggle it active/inactive."
-              : "Haz click en una fila para ver sus modelos, editar su configuración o activarla/desactivarla.",
+              ? "Click a row to see its models. Use the toggle to activate or deactivate it and \"Edit\" to change its configuration."
+              : "Haz click en una fila para ver sus modelos. Usa el interruptor para activarlo o desactivarlo y \"Editar\" para cambiar su configuración.",
         },
       },
     ];
