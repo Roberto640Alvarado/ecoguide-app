@@ -133,12 +133,12 @@ export function BadgeForm({
 
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-medium text-foreground">
-              {language === "en" ? "Image (PNG)" : "Imagen (PNG)"}
+              {language === "en" ? "Image (PNG or SVG)" : "Imagen (PNG o SVG)"}
             </label>
             <p className="-mt-1 text-xs text-muted">
               {language === "en"
-                ? "Upload the PNG image for this badge."
-                : "Carga la imagen PNG de esta insignia."}
+                ? "Upload the PNG or SVG image for this badge."
+                : "Carga la imagen PNG o SVG de esta insignia."}
             </p>
             <BadgeImageUploader
               image={imageUrl || undefined}

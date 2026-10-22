@@ -2,6 +2,12 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   images: {
+    // Las insignias pueden ser SVG (subidas a Cloudinary). next/image
+    // rechaza SVG por defecto; se permiten sin optimizar y con una CSP que
+    // bloquea cualquier script embebido en el archivo.
+    dangerouslyAllowSVG: true,
+    contentDispositionType: "attachment",
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
     remotePatterns: [
       {
         protocol: "https",

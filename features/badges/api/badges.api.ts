@@ -27,7 +27,7 @@ export function removeBadge(id: string) {
  * Ver el comentario equivalente en flash-cards.api.ts: hay que anular el
  * header Content-Type para que Axios envíe multipart/form-data en vez de
  * convertir el FormData a JSON. Usa el endpoint dedicado /upload-files/
- * badge-image, que solo acepta PNG (validado también en el backend).
+ * badge-image, que solo acepta PNG o SVG (hasta 5 MB) (validado también en el backend).
  */
 export function uploadBadgeImage(file: File) {
   const formData = new FormData();

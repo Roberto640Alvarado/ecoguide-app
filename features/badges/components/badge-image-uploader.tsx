@@ -2,13 +2,13 @@
 
 import { useRef, useState, type ChangeEvent, type DragEvent } from "react";
 import Image from "next/image";
-import { Spinner } from "@heroui/react";
+import { Spinner, toast } from "@heroui/react";
 import { ImagePlus, X } from "lucide-react";
 import { useLanguageStore } from "@/store/language-store";
 import { useUploadBadgeImage } from "../hooks/use-upload-badge-image";
 
-const MAX_FILE_SIZE_BYTES = 2 * 1024 * 1024;
-const ALLOWED_MIME_TYPES = ["image/png"];
+const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024;
+const ALLOWED_MIME_TYPES = ["image/png", "image/svg+xml"];
 
 interface BadgeImageUploaderProps {
   image: string | undefined;
@@ -17,8 +17,8 @@ interface BadgeImageUploaderProps {
 }
 
 /**
- * Variante de FlashCardImageUploader restringida a PNG: la imagen de una
- * insignia debe ser PNG (requisito explícito del maestro), tanto en el
+ * Variante de FlashCardImageUploader restringida a PNG o SVG (hasta 5 MB):
+ * la imagen de una insignia debe ser PNG o SVG, tanto en el
  * accept del input como en la validación previa al envío, en espejo de la
  * whitelist ALLOWED_BADGE_IMAGE_MIME_TYPES del backend.
  */
@@ -37,11 +37,23 @@ export function BadgeImageUploader({
       return;
     }
 
+    // Se avisa con un toast en vez de ignorar el archivo en silencio, para
+    // que el maestro sepa por qué no se cargó.
     if (!ALLOWED_MIME_TYPES.includes(file.type)) {
+      toast.danger(
+        language === "en"
+          ? "Only PNG or SVG images are allowed."
+          : "Solo se permiten imágenes PNG o SVG.",
+      );
       return;
     }
 
     if (file.size > MAX_FILE_SIZE_BYTES) {
+      toast.danger(
+        language === "en"
+          ? "The image must be 5 MB or smaller."
+          : "La imagen no debe superar los 5 MB.",
+      );
       return;
     }
 
@@ -120,15 +132,15 @@ export function BadgeImageUploader({
       <input
         ref={inputRef}
         type="file"
-        accept="image/png"
+        accept="image/png,image/svg+xml,.png,.svg"
         onChange={handleFileChange}
         className="hidden"
       />
 
       <p className="text-xs text-muted">
         {language === "en"
-          ? "Required · PNG only, up to 2 MB."
-          : "Requerido · Solo PNG, hasta 2 MB."}
+          ? "Required · Only PNG or SVG formats are accepted, up to 5 MB."
+          : "Requerido · Solo se aceptan formatos PNG o SVG, hasta 5 MB."}
       </p>
 
       {error && <p className="text-xs text-danger">{error}</p>}
