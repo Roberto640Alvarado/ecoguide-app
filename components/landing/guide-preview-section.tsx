@@ -88,7 +88,7 @@ export function GuidePreviewSection() {
   const isInView = useInView(ref, { once: true, amount: 0.3 });
 
   return (
-    <section className="mx-auto max-w-5xl px-4 pb-24 sm:px-6 lg:px-8">
+    <section className="mx-auto max-w-6xl px-4 pb-24 sm:px-6 lg:px-8">
       <motion.div
         ref={ref}
         initial={{ opacity: 0, y: 24 }}
@@ -105,7 +105,7 @@ export function GuidePreviewSection() {
           aria-hidden="true"
         />
 
-        <div className="relative grid gap-8 lg:grid-cols-[minmax(0,260px)_1fr] lg:items-center lg:gap-10">
+        <div className="relative grid gap-8 lg:grid-cols-[minmax(0,220px)_1fr] lg:items-center lg:gap-8 xl:gap-10">
           {/* Columna izquierda: presentación de Eco */}
           <div className="flex flex-col items-center gap-4 text-center lg:items-start lg:text-left">
             <motion.div
