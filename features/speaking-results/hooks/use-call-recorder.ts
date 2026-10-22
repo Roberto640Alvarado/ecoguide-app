@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { getAudioContext } from "../utils/audio-unlock";
 
 export type CallRecorderStatus = "idle" | "recording" | "unsupported";
 
@@ -11,7 +12,11 @@ interface UseCallRecorderResult {
   start: () => Promise<void>;
   /** Detiene la grabación y resuelve con el audio grabado (o null si falló). */
   stop: () => Promise<Blob | null>;
+  /** Analizador del micrófono mientras se graba, para visualizar el volumen. */
+  inputAnalyser: AnalyserNode | null;
 }
+
+const INPUT_ANALYSER_FFT_SIZE = 512;
 
 /**
  * Graba el turno del estudiante (solo MediaRecorder, sin Web Speech API): la
@@ -28,6 +33,10 @@ export function useCallRecorder(): UseCallRecorderResult {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const chunksRef = useRef<Blob[]>([]);
+  const inputSourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
+  const [inputAnalyser, setInputAnalyser] = useState<AnalyserNode | null>(
+    null,
+  );
 
   useEffect(() => {
     const supported =
@@ -42,8 +51,31 @@ export function useCallRecorder(): UseCallRecorderResult {
   }, []);
 
   const cleanupStream = useCallback(() => {
+    inputSourceRef.current?.disconnect();
+    inputSourceRef.current = null;
+    setInputAnalyser(null);
     streamRef.current?.getTracks().forEach((track) => track.stop());
     streamRef.current = null;
+  }, []);
+
+  /** Conecta el micrófono a un AnalyserNode (no a los parlantes). */
+  const connectInputAnalyser = useCallback((stream: MediaStream) => {
+    const context = getAudioContext();
+
+    if (!context) {
+      return;
+    }
+
+    try {
+      const source = context.createMediaStreamSource(stream);
+      const analyser = context.createAnalyser();
+      analyser.fftSize = INPUT_ANALYSER_FFT_SIZE;
+      source.connect(analyser);
+      inputSourceRef.current = source;
+      setInputAnalyser(analyser);
+    } catch {
+      // La visualización es opcional: la grabación sigue sin ella.
+    }
   }, []);
 
   const start = useCallback(async () => {
@@ -60,6 +92,7 @@ export function useCallRecorder(): UseCallRecorderResult {
         audio: true,
       });
       streamRef.current = stream;
+      connectInputAnalyser(stream);
 
       const mediaRecorder = new MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
@@ -78,7 +111,7 @@ export function useCallRecorder(): UseCallRecorderResult {
       );
       cleanupStream();
     }
-  }, [cleanupStream]);
+  }, [cleanupStream, connectInputAnalyser]);
 
   const stop = useCallback((): Promise<Blob | null> => {
     return new Promise((resolve) => {
@@ -104,5 +137,5 @@ export function useCallRecorder(): UseCallRecorderResult {
 
   useEffect(() => cleanupStream, [cleanupStream]);
 
-  return { status, error, start, stop };
+  return { status, error, start, stop, inputAnalyser };
 }

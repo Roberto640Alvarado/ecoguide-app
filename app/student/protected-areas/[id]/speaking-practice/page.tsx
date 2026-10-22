@@ -5,8 +5,9 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { Button, Spinner, toast } from "@heroui/react";
-import { ArrowLeft, Mic, Phone } from "lucide-react";
+import { toast } from "@heroui/react";
+import { ArrowLeft, Loader2, Mic, Phone } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { useLanguageStore } from "@/store/language-store";
 import { useProtectedArea } from "@/features/protected-areas/hooks/use-protected-area";
 import { useSpeakingPracticeByArea } from "@/features/speaking-practices/hooks/use-speaking-practice-by-area";
@@ -15,7 +16,9 @@ import {
   sanitizeRichText,
 } from "@/lib/utils/rich-text";
 import { CallScreen } from "@/features/speaking-results/components/call-screen";
-import { SpeakingFeedbackCard } from "@/features/speaking-results/components/speaking-feedback-card";
+import { unlockAudio } from "@/features/speaking-results/utils/audio-unlock";
+import { CallSummary } from "@/features/speaking-results/components/call-summary";
+import { CallBackdrop } from "@/features/speaking-results/components/call-backdrop";
 import { SpeakingHistoryList } from "@/features/speaking-results/components/speaking-history-list";
 import { useStartSpeakingResult } from "@/features/speaking-results/hooks/use-start-speaking-result";
 import type { SpeakingResult } from "@/features/speaking-results/types/speaking-result.types";
@@ -37,6 +40,9 @@ export default function StudentSpeakingPracticePage() {
   const isLoading = isLoadingArea || isLoadingPractice;
 
   async function handleStartCall() {
+    // Debe ir antes de cualquier await: desbloquea el audio dentro del clic
+    // para que la primera respuesta de EcoGuía pueda sonar al llegar.
+    unlockAudio();
     setFinishedCall(null);
 
     try {
@@ -68,7 +74,9 @@ export default function StudentSpeakingPracticePage() {
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className="flex items-center gap-3"
+        // Durante la llamada, en móvil se oculta el título para que la
+        // llamada ocupe toda la pantalla.
+        className={cn("items-center gap-3", activeCall ? "hidden sm:flex" : "flex")}
       >
         <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent-soft text-accent-soft-foreground">
           <Mic className="h-5 w-5" aria-hidden="true" />
@@ -89,7 +97,7 @@ export default function StudentSpeakingPracticePage() {
 
       {isLoading ? (
         <div className="flex justify-center py-16">
-          <Spinner size="md" />
+          <Loader2 className="size-6 animate-spin text-muted" aria-hidden="true" />
         </div>
       ) : !area ? (
         <p className="text-center text-sm text-muted">
@@ -108,30 +116,27 @@ export default function StudentSpeakingPracticePage() {
           transition={{ duration: 0.4, delay: 0.1 }}
           className="flex flex-col gap-6"
         >
-          {!activeCall && (
-            <div className="relative flex flex-col items-center gap-5 overflow-hidden rounded-3xl border border-border bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-accent-soft/50 via-surface to-surface px-6 py-10 text-center sm:px-10 sm:py-14">
-              <div
-                className="pointer-events-none absolute -top-20 left-1/2 h-56 w-56 -translate-x-1/2 rounded-full bg-accent-soft blur-3xl"
-                aria-hidden="true"
-              />
+          {!activeCall && !finishedCall && (
+            <div className="relative isolate flex flex-col items-center gap-6 overflow-hidden rounded-3xl border border-border bg-background px-6 py-10 text-center text-foreground sm:px-10 sm:py-14">
+              <CallBackdrop />
 
               <div className="relative">
-                <div className="absolute inset-0 -z-10 rounded-full bg-accent-soft blur-2xl" />
                 <Image
                   src="/eco-avatar.png"
                   alt="EcoGuía"
-                  width={112}
-                  height={112}
-                  className="h-28 w-28 rounded-full border-4 border-surface object-cover object-top shadow-lg"
+                  width={128}
+                  height={128}
+                  className="size-28 rounded-full border-4 border-surface bg-accent-soft object-cover object-top shadow-2xl sm:size-32"
                   priority
                 />
-                <span className="absolute bottom-1 right-1 flex h-5 w-5 items-center justify-center rounded-full border-2 border-surface bg-success">
-                  <span className="h-2 w-2 rounded-full bg-success-foreground" />
-                </span>
+                <span className="absolute bottom-1.5 right-1.5 size-5 rounded-full border-[3px] border-background bg-success" />
               </div>
 
               <div className="flex max-w-xl flex-col gap-2">
-                <h2 className="text-lg font-semibold text-foreground">
+                <p className="text-xs font-medium uppercase tracking-wider text-muted">
+                  {en ? "EcoGuía is available" : "EcoGuía está disponible"}
+                </p>
+                <h2 className="text-xl font-semibold sm:text-2xl">
                   {practice.title}
                 </h2>
                 <div
@@ -142,33 +147,52 @@ export default function StudentSpeakingPracticePage() {
                 />
                 <p className="text-xs text-muted">
                   {en
-                    ? "EcoGuía will call you and speak first — just answer with your microphone when it's your turn."
-                    : "EcoGuía te llamará y hablará primero — solo responde con tu micrófono cuando sea tu turno."}
+                    ? "EcoGuía will speak first — answer with your microphone when it's your turn."
+                    : "EcoGuía hablará primero — responde con tu micrófono cuando sea tu turno."}
                 </p>
               </div>
 
-              <Button
-                variant="primary"
-                size="lg"
-                onPress={handleStartCall}
-                isDisabled={startCall.isPending}
-                className="mt-1"
-              >
-                {startCall.isPending ? (
-                  <Spinner size="sm" />
-                ) : (
-                  <>
-                    <Phone className="h-4 w-4" aria-hidden="true" />
-                    {en ? "Start call" : "Iniciar llamada"}
-                  </>
-                )}
-              </Button>
+              <div className="flex flex-col items-center gap-2">
+                <motion.button
+                  type="button"
+                  onClick={handleStartCall}
+                  disabled={startCall.isPending}
+                  whileTap={{ scale: 0.92 }}
+                  aria-label={en ? "Start call" : "Iniciar llamada"}
+                  className="relative isolate flex size-20 items-center justify-center rounded-full bg-accent text-accent-foreground shadow-lg shadow-accent/40 transition-colors hover:bg-accent/90 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring disabled:opacity-60"
+                >
+                  {!startCall.isPending && (
+                    <span
+                      className="absolute inset-0 -z-10 animate-ping rounded-full bg-accent opacity-40 motion-reduce:hidden"
+                      aria-hidden="true"
+                    />
+                  )}
+                  {startCall.isPending ? (
+                    <Loader2 className="size-8 animate-spin" aria-hidden="true" />
+                  ) : (
+                    <Phone className="size-8 fill-current" aria-hidden="true" />
+                  )}
+                </motion.button>
+                <span className="text-sm font-medium text-muted">
+                  {startCall.isPending
+                    ? en
+                      ? "Calling..."
+                      : "Llamando..."
+                    : en
+                      ? "Start call"
+                      : "Iniciar llamada"}
+                </span>
+              </div>
             </div>
           )}
 
           {activeCall && (
             <CallScreen
               result={activeCall}
+              areaName={area.name}
+              // Móvil: pantalla completa de borde a borde (como una llamada
+              // real). Escritorio: tarjeta con el alto disponible.
+              className="-mx-4 h-[calc(100dvh-8rem)] min-h-[34rem] sm:mx-0 sm:h-[calc(100dvh-14rem)] sm:min-h-[36rem] sm:rounded-3xl lg:max-h-[56rem]"
               onUpdated={setActiveCall}
               onEnded={(result) => {
                 setActiveCall(null);
@@ -178,16 +202,13 @@ export default function StudentSpeakingPracticePage() {
           )}
 
           {finishedCall && (
-            <div className="flex flex-col gap-4">
-              <SpeakingFeedbackCard result={finishedCall} />
-              <button
-                type="button"
-                onClick={() => setFinishedCall(null)}
-                className="self-center text-sm font-medium text-accent hover:underline"
-              >
-                {en ? "Done" : "Listo"}
-              </button>
-            </div>
+            <CallSummary
+              result={finishedCall}
+              onCallAgain={handleStartCall}
+              isCallingAgain={startCall.isPending}
+              tourHref={`/student/protected-areas/${params.id}/tour`}
+              className="-mx-4 sm:mx-0 sm:rounded-3xl"
+            />
           )}
 
           {!activeCall && <SpeakingHistoryList protectedAreaId={params.id} />}
