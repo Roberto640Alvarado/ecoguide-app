@@ -54,11 +54,21 @@ export function createFlashCard(
   });
 }
 
+/**
+ * En edición, quitar la imagen debe enviarse explícitamente como `null`:
+ * normalizePayload la deja en `undefined` y JSON.stringify descarta esas
+ * claves, así que la API nunca recibía el campo y conservaba la imagen
+ * anterior. Solo se envía si el payload trae la clave `image`, para no
+ * borrarla en actualizaciones parciales que no la incluyan.
+ */
 export function updateFlashCard(
   id: string,
   payload: Partial<FlashCardFormValues>,
 ) {
-  return apiPatch<FlashCard>(`/flash-cards/${id}`, normalizePayload(payload));
+  return apiPatch<FlashCard>(`/flash-cards/${id}`, {
+    ...normalizePayload(payload),
+    ...("image" in payload && { image: payload.image || null }),
+  });
 }
 
 export function removeFlashCard(id: string) {
