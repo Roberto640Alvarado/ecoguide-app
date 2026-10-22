@@ -47,3 +47,11 @@ envío lento. Se aprovechó para migrar la vista a shadcn/ui.
 La vista ya no importa componentes de HeroUI salvo `toast` (igual que las
 demás vistas migradas, hasta que exista un reemplazo de toasts en
 shadcn/ui). Todas las animaciones respetan `prefers-reduced-motion`.
+
+## Ajustes posteriores
+
+- Al finalizar un chat: aviso de sistema centrado "Conversación finalizada
+  · hora", tarjeta de retroalimentación y, en el pie, las acciones "Seguir
+  practicando" (nuevo chat) y "Continuar con el recorrido"
+  (`components/ui/session-complete-actions.tsx`, compartido con la llamada
+  de speaking). En móvil los botones van apilados a todo el ancho.

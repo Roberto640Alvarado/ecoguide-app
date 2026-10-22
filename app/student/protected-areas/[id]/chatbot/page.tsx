@@ -151,6 +151,7 @@ export default function StudentChatbotPage() {
               onStartNew={handleStartNew}
               isStarting={startConversation.isPending}
               onOpenHistory={() => setIsHistoryOpen(true)}
+              tourHref={`/student/protected-areas/${params.id}/tour`}
             />
           ) : (
             <div className="flex h-full min-h-0 flex-col items-center justify-center gap-4 rounded-2xl border border-dashed border-border bg-surface p-8 text-center">

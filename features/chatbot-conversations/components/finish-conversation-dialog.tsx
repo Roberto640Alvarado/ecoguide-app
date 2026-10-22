@@ -40,12 +40,18 @@ export function FinishConversationDialog({
   return (
     <AlertDialog open={open} onOpenChange={setOpen}>
       <AlertDialogTrigger asChild>
-        <Button variant="outline" size="sm" className="shrink-0 rounded-full">
+        {/* Rojo y con texto también en móvil: es la acción principal del
+            encabezado y antes, solo con el ícono, pasaba desapercibida. */}
+        <Button
+          variant="destructive"
+          size="sm"
+          className="h-9 shrink-0 gap-1.5 rounded-full px-3.5 font-semibold shadow-sm shadow-destructive/30 sm:px-4"
+        >
           <Flag className="size-3.5" aria-hidden="true" />
-          <span className="hidden sm:inline">
-            {language === "en" ? "Finish chat" : "Finalizar chat"}
+          <span className="sm:hidden">
+            {language === "en" ? "Finish" : "Finalizar"}
           </span>
-          <span className="sr-only sm:hidden">
+          <span className="hidden sm:inline">
             {language === "en" ? "Finish chat" : "Finalizar chat"}
           </span>
         </Button>
@@ -65,7 +71,7 @@ export function FinishConversationDialog({
           <AlertDialogCancel disabled={isLoading}>
             {language === "en" ? "Cancel" : "Cancelar"}
           </AlertDialogCancel>
-          <Button onClick={handleConfirm} disabled={isLoading}>
+          <Button variant="destructive" onClick={handleConfirm} disabled={isLoading}>
             {isLoading && (
               <Loader2 className="size-4 animate-spin" aria-hidden="true" />
             )}

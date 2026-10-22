@@ -3,9 +3,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { toast } from "@heroui/react";
-import { CheckCheck, ChevronLeft, Loader2, MessageSquarePlus } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { format } from "date-fns";
+import { enUS, es } from "date-fns/locale";
+import { ChevronLeft, Flag, Sparkles } from "lucide-react";
 import { EcoGuideAvatar } from "@/components/ui/eco-guide-avatar";
+import { SessionCompleteActions } from "@/components/ui/session-complete-actions";
 import { cn } from "@/lib/utils";
 import { useLanguageStore } from "@/store/language-store";
 import { useTranslatedText } from "@/features/translation/hooks/use-translated-texts";
@@ -29,6 +31,8 @@ interface ChatWindowProps {
   isStarting: boolean;
   /** Abre el historial de chats (en móvil/tablet vive en un panel lateral). */
   onOpenHistory: () => void;
+  /** Recorrido del área, para el botón "Continuar con el recorrido". */
+  tourHref: string;
   className?: string;
 }
 
@@ -48,6 +52,7 @@ export function ChatWindow({
   onStartNew,
   isStarting,
   onOpenHistory,
+  tourHref,
   className,
 }: ChatWindowProps) {
   const language = useLanguageStore((state) => state.language);
@@ -237,20 +242,38 @@ export function ChatWindow({
             {isTyping && <TypingIndicator key="typing" />}
           </AnimatePresence>
 
-          {isFinished && conversation.feedback && (
+          {isFinished && (
             <motion.div
-              initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 12, scale: 0.97 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
+              initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
               transition={{ type: "spring", stiffness: 300, damping: 28 }}
-              className="mt-6 flex flex-col gap-2 rounded-2xl border border-accent/30 bg-accent-soft/40 p-4 sm:p-5"
+              className="mt-6 flex flex-col items-center gap-4"
             >
-              <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                <CheckCheck className="h-4 w-4 text-accent" aria-hidden="true" />
-                {language === "en" ? "Overall feedback" : "Retroalimentación general"}
-              </div>
-              <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground">
-                {translatedFeedback}
-              </p>
+              {/* Aviso de sistema centrado, como el cierre de un chat. */}
+              <span className="flex items-center gap-1.5 rounded-full bg-surface-secondary px-3 py-1 text-[11px] font-medium text-muted">
+                <Flag className="size-3" aria-hidden="true" />
+                {language === "en" ? "Conversation finished" : "Conversación finalizada"}
+                {conversation.endedAt &&
+                  ` · ${format(new Date(conversation.endedAt), "p", {
+                    locale: language === "en" ? enUS : es,
+                  })}`}
+              </span>
+
+              {conversation.feedback && (
+                <div className="flex w-full flex-col gap-3 rounded-2xl border border-accent/30 bg-accent-soft/40 p-4 sm:p-5">
+                  <div className="flex items-center gap-2">
+                    <span className="flex size-8 items-center justify-center rounded-xl bg-accent text-accent-foreground">
+                      <Sparkles className="size-4" aria-hidden="true" />
+                    </span>
+                    <h3 className="text-sm font-semibold text-foreground">
+                      {language === "en" ? "Your feedback" : "Tu retroalimentación"}
+                    </h3>
+                  </div>
+                  <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground">
+                    {translatedFeedback}
+                  </p>
+                </div>
+              )}
             </motion.div>
           )}
         </div>
@@ -259,26 +282,11 @@ export function ChatWindow({
       <footer className="border-t border-border px-3 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-6">
         <div className="mx-auto w-full max-w-3xl">
           {isFinished ? (
-            <div className="flex flex-col items-center gap-3 py-1 text-center sm:flex-row sm:justify-between sm:text-left">
-              <p className="text-sm text-muted">
-                {language === "en"
-                  ? "This conversation has ended."
-                  : "Esta conversación ha finalizado."}
-              </p>
-              <Button
-                size="sm"
-                className="rounded-full"
-                onClick={onStartNew}
-                disabled={isStarting}
-              >
-                {isStarting ? (
-                  <Loader2 className="animate-spin" aria-hidden="true" />
-                ) : (
-                  <MessageSquarePlus aria-hidden="true" />
-                )}
-                {language === "en" ? "New chat" : "Nuevo chat"}
-              </Button>
-            </div>
+            <SessionCompleteActions
+              onContinuePracticing={onStartNew}
+              isContinuing={isStarting}
+              tourHref={tourHref}
+            />
           ) : (
             <ChatComposer
               value={input}
