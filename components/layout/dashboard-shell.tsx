@@ -4,15 +4,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { Languages, LogOut, Loader2, type LucideIcon } from "lucide-react";
+import { Loader2, type LucideIcon } from "lucide-react";
 import { useAuthStore } from "@/store/auth-store";
 import { useLanguageStore } from "@/store/language-store";
-import { useLogout } from "@/features/auth/hooks/use-logout";
-import { UserAvatar } from "@/components/ui/user-avatar";
-import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { InstallAppButton } from "@/components/layout/install-app-button";
+import { LanguageSwitch } from "@/components/layout/language-switch";
+import { ThemeSwitch } from "@/components/layout/theme-switch";
+import { UserMenu } from "@/components/layout/user-menu";
 import { BrandLogo, BrandWordmark } from "@/components/brand/brand-logo";
 import {
   PageTitleProvider,
@@ -134,7 +133,7 @@ function TopbarBrand({ dashboardHref }: { dashboardHref: string }) {
     return (
       <>
         <Separator orientation="vertical" className="h-5" />
-        <h1 className="truncate text-lg font-bold text-foreground sm:text-xl">
+        <h1 className="min-w-0 truncate text-lg font-bold text-foreground sm:text-xl">
           {pageTitle.title}
         </h1>
       </>
@@ -161,10 +160,6 @@ export function DashboardShell({
   children,
 }: DashboardShellProps) {
   const isHydrated = useAuthStore((state) => state.isHydrated);
-  const user = useAuthStore((state) => state.user);
-  const language = useLanguageStore((state) => state.language);
-  const toggleLanguage = useLanguageStore((state) => state.toggleLanguage);
-  const logout = useLogout();
 
   // Evita que las páginas hijas disparen requests (React Query, etc.) antes
   // de que useSessionHydration termine de rehidratar el accessToken desde la
@@ -209,57 +204,12 @@ export function DashboardShell({
           </SidebarContent>
 
           <SidebarFooter>
-            <Link
-              href={profileHref}
-              className="flex items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-sidebar-accent"
-            >
-              <UserAvatar name={user?.name} avatarUrl={user?.avatarUrl} size="sm" />
-              <div className="min-w-0 group-data-[collapsible=icon]:hidden">
-                <p className="truncate text-sm font-semibold text-sidebar-foreground">
-                  {user ? `${user.name} ${user.lastName}` : "..."}
-                </p>
-                <p className="truncate text-xs text-muted-foreground">
-                  {roleLabel}
-                </p>
-              </div>
-            </Link>
-
-            <div className="flex items-center gap-2 group-data-[collapsible=icon]:flex-col">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="flex-1"
-                onClick={toggleLanguage}
-                aria-label="Toggle language"
-              >
-                <Languages className="size-4 shrink-0" aria-hidden="true" />
-                <span className="group-data-[collapsible=icon]:hidden">
-                  {language === "en" ? "ES" : "EN"}
-                </span>
-              </Button>
-              <ThemeToggle
-                className="flex-1"
-                labelClassName="group-data-[collapsible=icon]:hidden"
-                labels={
-                  language === "en"
-                    ? { light: "Light", dark: "Dark" }
-                    : { light: "Claro", dark: "Oscuro" }
-                }
-              />
-            </div>
             <InstallAppButton />
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full"
-              onClick={() => logout()}
-              aria-label="Logout"
-            >
-              <LogOut className="size-4 shrink-0" aria-hidden="true" />
-              <span className="group-data-[collapsible=icon]:hidden">
-                {language === "en" ? "Log out" : "Salir"}
-              </span>
-            </Button>
+            <UserMenu
+              roleLabel={roleLabel}
+              profileHref={profileHref}
+              dashboardHref={dashboardHref}
+            />
           </SidebarFooter>
 
           <SidebarRail />
@@ -269,6 +219,12 @@ export function DashboardShell({
           <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center gap-2 border-b border-border bg-background/80 px-4 backdrop-blur-md">
             <SidebarTrigger />
             <TopbarBrand dashboardHref={dashboardHref} />
+            {/* Preferencias de la interfaz: siempre a la vista, arriba a la
+                derecha, en todos los tamaños de pantalla. */}
+            <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-3">
+              <LanguageSwitch />
+              <ThemeSwitch />
+            </div>
           </header>
           <div className="px-4 pb-4 pt-2 sm:px-6 sm:pb-6 sm:pt-3 lg:px-10 lg:pb-10 lg:pt-4">{children}</div>
         </SidebarInset>
