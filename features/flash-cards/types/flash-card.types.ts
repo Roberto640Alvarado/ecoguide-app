@@ -20,8 +20,29 @@ export interface FlashCard {
   question: string | null;
   options: string[];
   correctAnswer: string | null;
+  /** Solo VOCABULARY: palabras inglés/español con su pronunciación. */
+  vocabularyItems: VocabularyItem[];
   createdAt: string;
 }
+
+/**
+ * Palabra de una flashcard VOCABULARY. Los audios son MP3 generados con IA
+ * una sola vez (botón del docente o al guardar); `null` si todavía no
+ * existen, en cuyo caso se usa la voz del navegador como respaldo.
+ */
+export interface VocabularyItem {
+  wordEn: string;
+  wordEs: string;
+  audioEnUrl: string | null;
+  audioEsUrl: string | null;
+}
+
+/** Idioma de una pronunciación de vocabulario. */
+export type PronunciationLanguage = "en" | "es";
+
+/** Espeja VOCABULARY_ITEMS_MAX / VOCABULARY_WORD_MAX_LENGTH de la API. */
+export const VOCABULARY_ITEMS_MAX = 30;
+export const VOCABULARY_WORD_MAX_LENGTH = 100;
 
 export interface FindFlashCardsParams {
   protectedAreaId: string;

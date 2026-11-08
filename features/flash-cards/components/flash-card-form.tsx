@@ -12,6 +12,7 @@ import { TextField } from "@/components/ui/text-field";
 import { useLanguageStore } from "@/store/language-store";
 import { FlashCardAvatar } from "./flash-card-avatar";
 import { FlashCardImageUploader } from "./flash-card-image-uploader";
+import { VocabularyItemsField } from "./vocabulary-items-field";
 import {
   flashCardSchema,
   type FlashCardFormValues,
@@ -79,6 +80,7 @@ export function FlashCardForm({
       question: "",
       options: ["", ""],
       correctAnswer: "",
+      vocabularyItems: [],
     },
   });
 
@@ -86,6 +88,7 @@ export function FlashCardForm({
   const image = watch("image");
   const options = watch("options") ?? [];
   const isEnvironmental = type === "ENVIRONMENTAL";
+  const isVocabulary = type === "VOCABULARY";
   const availableOptions = options.filter((option) => option.trim().length > 0);
 
   /**
@@ -96,7 +99,16 @@ export function FlashCardForm({
    * hacer nada.
    */
   function handleInvalid(formErrors: typeof errors) {
-    const firstMessage = Object.values(formErrors)[0]?.message;
+    const firstError = Object.values(formErrors)[0];
+    // Los errores de vocabularyItems vienen por fila (no traen `message`
+    // en el primer nivel).
+    const firstMessage =
+      firstError?.message ??
+      (formErrors.vocabularyItems
+        ? language === "en"
+          ? "Check the vocabulary words."
+          : "Revisa las palabras de vocabulario."
+        : undefined);
 
     toast.danger(
       firstMessage ??
@@ -185,11 +197,23 @@ export function FlashCardForm({
                 value={field.value}
                 onChange={field.onChange}
                 onBlur={field.onBlur}
-                label={language === "en" ? "Content" : "Contenido"}
+                label={
+                  isVocabulary
+                    ? language === "en"
+                      ? "Description (optional)"
+                      : "Descripción (opcional)"
+                    : language === "en"
+                      ? "Content"
+                      : "Contenido"
+                }
                 placeholder={
-                  language === "en"
-                    ? "Text shown to the student on this card."
-                    : "Texto que verá el estudiante en esta tarjeta."
+                  isVocabulary
+                    ? language === "en"
+                      ? "Optional intro shown above the words."
+                      : "Introducción opcional que se muestra arriba de las palabras."
+                    : language === "en"
+                      ? "Text shown to the student on this card."
+                      : "Texto que verá el estudiante en esta tarjeta."
                 }
                 error={errors.content?.message}
               />
@@ -218,6 +242,23 @@ export function FlashCardForm({
           </div>
         </div>
       </FormSection>
+
+      {isVocabulary && (
+        <FormSection
+          title={language === "en" ? "Vocabulary words" : "Palabras de vocabulario"}
+          description={
+            language === "en"
+              ? "Add each word in English and Spanish. Generate the pronunciation to listen to it (and regenerate it if you don't like it); the student will hear exactly that audio."
+              : "Agrega cada palabra en inglés y en español. Genera la pronunciación para escucharla (y regénerala si no te convence); el estudiante escuchará exactamente ese audio."
+          }
+        >
+          <VocabularyItemsField
+            control={control}
+            setValue={setValue}
+            errors={errors}
+          />
+        </FormSection>
+      )}
 
       {isEnvironmental && (
         <FormSection

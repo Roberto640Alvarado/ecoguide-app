@@ -67,6 +67,7 @@ export default function EditFlashCardPage() {
               question: flashCard.question ?? "",
               options: flashCard.options.length ? flashCard.options : ["", ""],
               correctAnswer: flashCard.correctAnswer ?? "",
+              vocabularyItems: flashCard.vocabularyItems ?? [],
             }}
             isSubmitting={updateFlashCard.isPending}
             submitLabel={language === "en" ? "Save changes" : "Guardar cambios"}

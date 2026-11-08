@@ -1,117 +1,135 @@
 "use client";
 
-import Image from "next/image";
-import { motion } from "framer-motion";
-import { richTextDisplayClassName, sanitizeRichText } from "@/lib/utils/rich-text";
+import { motion, useReducedMotion, type Variants } from "framer-motion";
+import { Lightbulb } from "lucide-react";
+import {
+  isBlankRichText,
+  richTextDisplayClassName,
+  sanitizeRichText,
+} from "@/lib/utils/rich-text";
+import { useLanguageStore } from "@/store/language-store";
 import { useTranslatedTexts } from "@/features/translation/hooks/use-translated-texts";
-import { FlashCardAvatar } from "./flash-card-avatar";
+import { FlashCardMediaPanel } from "./flash-card-media-panel";
 import { FlashCardTypeBadge } from "./flash-card-type-badge";
 import { FlashCardQuiz } from "./flash-card-quiz";
-import { FLASH_CARD_TYPE_TONE, type FlashCard } from "../types/flash-card.types";
+import { FlashCardVocabularyList } from "./flash-card-vocabulary-list";
+import type { FlashCard } from "../types/flash-card.types";
 
 interface FlashCardStudentCardProps {
   card: FlashCard;
-  /**
-   * Si esta es la tarjeta actualmente centrada en el mazo (ver
-   * FlashCardDeck). Como Embla monta todas las tarjetas del mazo a la vez
-   * (mismo patrón que FlashCardQuiz), este flag es lo que dispara el "pop"
-   * de entrada de la mascota y el contenido cada vez que el estudiante
-   * navega hacia esta tarjeta, en vez de animar una única vez al cargar la
-   * página.
-   */
-  isActive: boolean;
+  /** Respuesta del quiz (solo ENVIRONMENTAL), guardada en el mazo. */
+  quizAnswer: string | null;
+  onQuizAnswer: (option: string) => void;
 }
 
+const contentVariants: Variants = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.07, delayChildren: 0.12 } },
+};
+
+const itemVariants: Variants = {
+  hidden: { opacity: 0, y: 10 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.3, ease: "easeOut" } },
+};
+
 /**
- * Una tarjeta del mazo del estudiante, partida en dos paneles:
+ * Tarjeta del estudiante. Estructura común para todos los tipos —panel
+ * visual (imagen o mascota) + columna de contenido— y un cuerpo propio de
+ * cada categoría:
+ *  - WELCOME: texto de bienvenida más grande.
+ *  - CURIOUS_FACT: el dato destacado en un recuadro "¿Sabías que…?".
+ *  - ENVIRONMENTAL: quiz de opción múltiple.
+ *  - VOCABULARY: lista de palabras con pronunciación (las antiguas, sin
+ *    lista, siguen mostrando su contenido).
+ *  - GASTRONOMY / FLORA_FAUNA: texto con la imagen como protagonista.
  *
- *  - Panel de la mascota (tono de la categoría): badge + gesto de la
- *    mascota. A partir de `lg` va a la IZQUIERDA con ancho fijo; abajo de
- *    `lg` se apila arriba, a todo el ancho.
- *  - Panel de contenido (`surface`): título y texto (o el quiz de
- *    ENVIRONMENTAL) + imagen opcional.
- *
- * El corte entre ambos paneles es un cambio de color plano, no un
- * degradado que se desvanece hasta el fondo de la página — así el límite
- * de la tarjeta se ve siempre, sin importar cuánto texto traiga.
- * El layout horizontal aprovecha el ancho disponible en escritorio, que
- * antes quedaba vacío a los lados con la tarjeta en una sola columna.
+ * El contenido entra escalonado cada vez que la tarjeta aparece (solo hay
+ * una montada a la vez), salvo con `prefers-reduced-motion`.
  */
-export function FlashCardStudentCard({ card, isActive }: FlashCardStudentCardProps) {
-  const theme = FLASH_CARD_TYPE_TONE[card.type];
-  const isEnvironmental = card.type === "ENVIRONMENTAL";
+export function FlashCardStudentCard({
+  card,
+  quizAnswer,
+  onQuizAnswer,
+}: FlashCardStudentCardProps) {
+  const language = useLanguageStore((state) => state.language);
+  const reduceMotion = useReducedMotion();
   const [translatedTitle, translatedContent] = useTranslatedTexts([
     card.title,
     card.content,
   ]);
 
+  const vocabularyItems = card.vocabularyItems ?? [];
+  const hasVocabularyList =
+    card.type === "VOCABULARY" && vocabularyItems.length > 0;
+  const hasContent =
+    card.type !== "ENVIRONMENTAL" && !isBlankRichText(card.content);
+  const contentHtml = sanitizeRichText(translatedContent);
+
   return (
-    <div className="flex h-full min-h-[20rem] w-full flex-col overflow-hidden rounded-3xl border border-border bg-surface shadow-sm lg:flex-row">
-      <div
-        /* Alto fijo en mobile (h-56 = 224px): las flechas de navegación del
-           mazo se posicionan sobre esta franja con un offset fijo
-           (`top-28` en FlashCardDeck), así que su centro tiene que ser
-           predecible y no depender del largo del título ni del contenido.
-           Desde `lg` el panel pasa a ser la columna izquierda y el alto lo
-           define el contenido. */
-        className={`flex h-56 shrink-0 flex-col items-center justify-center gap-4 px-6 text-center lg:h-auto lg:w-72 lg:py-10 ${theme.chipBg}`}
+    <article className="grid w-full overflow-hidden rounded-[1.75rem] border border-border bg-surface shadow-xl shadow-foreground/5 lg:min-h-[30rem] lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
+      <FlashCardMediaPanel card={card} />
+
+      <motion.div
+        variants={contentVariants}
+        initial={reduceMotion ? false : "hidden"}
+        animate="visible"
+        className="flex min-w-0 flex-col gap-4 p-5 sm:gap-5 sm:p-8 lg:justify-center lg:p-10"
       >
-        <FlashCardTypeBadge type={card.type} variant="contrast" />
-
-        <motion.div
-          animate={
-            isActive ? { opacity: 1, scale: 1 } : { opacity: 0.5, scale: 0.85 }
-          }
-          transition={{ type: "spring", stiffness: 260, damping: 18 }}
-          className="relative"
-        >
-          <span
-            aria-hidden="true"
-            className="absolute inset-1 -z-10 rounded-full bg-surface/70 blur-2xl"
-          />
-          <FlashCardAvatar
-            type={card.type}
-            className="h-28 w-28 object-contain drop-shadow-lg lg:h-36 lg:w-36"
-          />
+        <motion.div variants={itemVariants}>
+          <FlashCardTypeBadge type={card.type} />
         </motion.div>
-      </div>
 
-      <div className="flex min-w-0 flex-1 flex-col gap-4 overflow-y-auto overflow-x-hidden p-6 sm:p-8">
         <motion.h2
-          animate={isActive ? { opacity: 1, y: 0 } : { opacity: 0.6, y: 4 }}
-          transition={{ duration: 0.3, delay: isActive ? 0.05 : 0 }}
-          className="text-xl font-bold text-foreground sm:text-2xl"
+          variants={itemVariants}
+          className={`text-balance font-bold leading-tight tracking-tight text-foreground ${
+            card.type === "WELCOME" ? "text-3xl sm:text-4xl" : "text-2xl sm:text-3xl"
+          }`}
         >
           {translatedTitle}
         </motion.h2>
 
-        <motion.div
-          animate={isActive ? { opacity: 1, y: 0 } : { opacity: 0.7, y: 6 }}
-          transition={{ duration: 0.3, delay: isActive ? 0.12 : 0 }}
-          className="flex min-w-0 flex-col gap-4"
-        >
-          {isEnvironmental ? (
-            <FlashCardQuiz card={card} />
-          ) : (
-            <div
-              className={`break-words text-sm leading-relaxed text-muted sm:text-base ${richTextDisplayClassName}`}
-              dangerouslySetInnerHTML={{ __html: sanitizeRichText(translatedContent) }}
+        {card.type === "ENVIRONMENTAL" && (
+          <motion.div variants={itemVariants}>
+            <FlashCardQuiz
+              card={card}
+              selected={quizAnswer}
+              onSelect={onQuizAnswer}
             />
-          )}
+          </motion.div>
+        )}
 
-          {card.image && !isEnvironmental && (
-            <div className="relative h-44 w-full overflow-hidden rounded-2xl border border-border/60 shadow-sm sm:h-56">
-              <Image
-                src={card.image}
-                alt=""
-                fill
-                sizes="(min-width: 1024px) 800px, 100vw"
-                className="object-cover"
-              />
-            </div>
-          )}
-        </motion.div>
-      </div>
-    </div>
+        {hasContent && card.type === "CURIOUS_FACT" && (
+          <motion.aside
+            variants={itemVariants}
+            className="flex flex-col gap-2 rounded-2xl border-l-4 border-accent bg-accent-soft/50 p-5"
+          >
+            <p className="flex items-center gap-2 text-sm font-semibold text-accent-soft-foreground">
+              <Lightbulb className="size-4" aria-hidden="true" />
+              {language === "en" ? "Did you know?" : "¿Sabías que…?"}
+            </p>
+            <div
+              className={`break-words text-base leading-relaxed text-foreground sm:text-lg ${richTextDisplayClassName}`}
+              dangerouslySetInnerHTML={{ __html: contentHtml }}
+            />
+          </motion.aside>
+        )}
+
+        {hasContent && card.type !== "CURIOUS_FACT" && (
+          <motion.div
+            variants={itemVariants}
+            className={`max-w-prose break-words leading-relaxed text-muted ${
+              card.type === "WELCOME" ? "text-base sm:text-lg" : "text-sm sm:text-base"
+            } ${richTextDisplayClassName}`}
+            dangerouslySetInnerHTML={{ __html: contentHtml }}
+          />
+        )}
+
+        {hasVocabularyList && (
+          <motion.div variants={itemVariants}>
+            <FlashCardVocabularyList items={vocabularyItems} />
+          </motion.div>
+        )}
+      </motion.div>
+    </article>
   );
 }

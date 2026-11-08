@@ -1,32 +1,31 @@
 "use client";
 
-import { useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import { Check, X } from "lucide-react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { Check, CircleCheck, CircleX, X } from "lucide-react";
 import { useLanguageStore } from "@/store/language-store";
 import { useTranslatedTexts } from "@/features/translation/hooks/use-translated-texts";
 import type { FlashCard } from "../types/flash-card.types";
 
 interface FlashCardQuizProps {
   card: FlashCard;
+  /** Opción elegida (texto original), o null si aún no responde. */
+  selected: string | null;
+  onSelect: (option: string) => void;
 }
 
+const OPTION_LETTERS = "ABCDEFGH";
+
 /**
- * Interacción de opción múltiple para tarjetas ENVIRONMENTAL. Mantiene su
- * propio estado de "opción elegida" — como FlashCardDeck monta todas las
- * tarjetas del mazo a la vez (mismo patrón que ProtectedAreaImageCarousel),
- * cada instancia conserva su respuesta al ir y volver entre tarjetas, sin
- * necesidad de sincronizar nada con el carrusel.
+ * Opción múltiple de las tarjetas ENVIRONMENTAL. La respuesta la guarda el
+ * mazo (FlashCardDeck): solo la tarjeta actual está montada, así que la
+ * elección se conserva al ir y volver entre tarjetas.
  *
- * El estado de selección y la comparación con `correctAnswer` siempre usan
- * el texto ORIGINAL de `card.options` como clave — solo el texto que se
- * muestra en pantalla pasa por la traducción, para no romper la corrección
- * del quiz si DeepL traduce dos opciones distintas a un mismo texto en
- * inglés (poco probable, pero mejor no depender de eso).
+ * El estado de selección y la comparación con `correctAnswer` usan el texto
+ * ORIGINAL de `card.options`; solo lo que se muestra pasa por traducción.
  */
-export function FlashCardQuiz({ card }: FlashCardQuizProps) {
+export function FlashCardQuiz({ card, selected, onSelect }: FlashCardQuizProps) {
   const language = useLanguageStore((state) => state.language);
-  const [selected, setSelected] = useState<string | null>(null);
+  const reduceMotion = useReducedMotion();
   const hasAnswered = selected !== null;
   const isCorrect = selected === card.correctAnswer;
 
@@ -41,25 +40,30 @@ export function FlashCardQuiz({ card }: FlashCardQuizProps) {
       : card.correctAnswer;
 
   return (
-    <div className="flex w-full flex-col gap-3">
-      <p className="text-sm font-semibold text-foreground sm:text-base">
+    <div className="flex w-full flex-col gap-4">
+      <p className="text-lg font-semibold leading-snug text-foreground sm:text-xl">
         {translatedQuestion}
       </p>
 
-      <div className="flex flex-col gap-2">
+      <div className="grid grid-cols-1 gap-2.5" role="group">
         {card.options.map((option, index) => {
           const isSelected = selected === option;
           const isTheCorrectAnswer = option === card.correctAnswer;
           const displayOption = translatedOptions[index] ?? option;
+          const isWrongPick = hasAnswered && isSelected && !isTheCorrectAnswer;
 
-          let stateClasses = "border-border bg-surface hover:border-accent";
+          let stateClasses =
+            "border-border bg-background hover:border-primary hover:bg-success-soft/30";
+          let letterClasses = "bg-default-soft text-foreground";
           if (hasAnswered) {
             if (isTheCorrectAnswer) {
               stateClasses = "border-success-soft-foreground bg-success-soft";
+              letterClasses = "bg-primary text-primary-foreground";
             } else if (isSelected) {
               stateClasses = "border-danger-soft-foreground bg-danger-soft";
+              letterClasses = "bg-danger text-danger-foreground";
             } else {
-              stateClasses = "border-border bg-surface opacity-60";
+              stateClasses = "border-border bg-background opacity-50";
             }
           }
 
@@ -68,35 +72,36 @@ export function FlashCardQuiz({ card }: FlashCardQuizProps) {
               key={option}
               type="button"
               disabled={hasAnswered}
-              onClick={() => setSelected(option)}
-              whileHover={!hasAnswered ? { x: 3 } : undefined}
+              onClick={() => onSelect(option)}
+              animate={
+                isWrongPick && !reduceMotion
+                  ? { x: [0, -8, 8, -5, 5, 0] }
+                  : { x: 0 }
+              }
+              transition={{ duration: 0.4 }}
               whileTap={!hasAnswered ? { scale: 0.98 } : undefined}
-              className={`flex items-center justify-between gap-2 rounded-xl border px-4 py-2.5 text-left text-sm font-medium text-foreground transition-colors disabled:cursor-default ${stateClasses}`}
+              className={`flex items-center gap-3 rounded-2xl border-2 px-3 py-3 text-left text-sm font-medium text-foreground transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-default sm:text-base ${stateClasses}`}
             >
-              {displayOption}
+              <span
+                aria-hidden="true"
+                className={`flex size-8 shrink-0 items-center justify-center rounded-xl text-sm font-bold transition-colors ${letterClasses}`}
+              >
+                {OPTION_LETTERS[index] ?? index + 1}
+              </span>
+              <span className="min-w-0 flex-1">{displayOption}</span>
               <AnimatePresence>
-                {hasAnswered && isTheCorrectAnswer && (
+                {hasAnswered && (isTheCorrectAnswer || isSelected) && (
                   <motion.span
-                    initial={{ opacity: 0, scale: 0.5 }}
+                    initial={reduceMotion ? false : { opacity: 0, scale: 0.4 }}
                     animate={{ opacity: 1, scale: 1 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 18 }}
                     className="shrink-0"
                   >
-                    <Check
-                      className="h-4 w-4 text-success-soft-foreground"
-                      aria-hidden="true"
-                    />
-                  </motion.span>
-                )}
-                {hasAnswered && isSelected && !isTheCorrectAnswer && (
-                  <motion.span
-                    initial={{ opacity: 0, scale: 0.5 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="shrink-0"
-                  >
-                    <X
-                      className="h-4 w-4 text-danger-soft-foreground"
-                      aria-hidden="true"
-                    />
+                    {isTheCorrectAnswer ? (
+                      <Check className="size-5 text-success-soft-foreground" aria-hidden="true" />
+                    ) : (
+                      <X className="size-5 text-danger-soft-foreground" aria-hidden="true" />
+                    )}
                   </motion.span>
                 )}
               </AnimatePresence>
@@ -105,23 +110,35 @@ export function FlashCardQuiz({ card }: FlashCardQuizProps) {
         })}
       </div>
 
-      {hasAnswered && (
-        <motion.p
-          initial={{ opacity: 0, y: -6 }}
-          animate={{ opacity: 1, y: 0 }}
-          className={`text-sm font-medium ${
-            isCorrect ? "text-success-soft-foreground" : "text-danger-soft-foreground"
-          }`}
-        >
-          {isCorrect
-            ? language === "en"
-              ? "Correct!"
-              : "¡Correcto!"
-            : language === "en"
-              ? `Not quite. The correct answer is "${translatedCorrectAnswer}".`
-              : `Casi. La respuesta correcta es "${translatedCorrectAnswer}".`}
-        </motion.p>
-      )}
+      <AnimatePresence>
+        {hasAnswered && (
+          <motion.div
+            initial={reduceMotion ? false : { opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            role="status"
+            className={`flex items-start gap-2.5 rounded-2xl p-4 text-sm font-medium ${
+              isCorrect
+                ? "bg-success-soft text-success-soft-foreground"
+                : "bg-danger-soft text-danger-soft-foreground"
+            }`}
+          >
+            {isCorrect ? (
+              <CircleCheck className="size-5 shrink-0" aria-hidden="true" />
+            ) : (
+              <CircleX className="size-5 shrink-0" aria-hidden="true" />
+            )}
+            <span>
+              {isCorrect
+                ? language === "en"
+                  ? "Correct! You can move on to the next card."
+                  : "¡Correcto! Ya puedes pasar a la siguiente tarjeta."
+                : language === "en"
+                  ? `Not quite. The correct answer is "${translatedCorrectAnswer}".`
+                  : `Casi. La respuesta correcta es "${translatedCorrectAnswer}".`}
+            </span>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

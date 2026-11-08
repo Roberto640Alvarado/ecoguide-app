@@ -1,8 +1,10 @@
 import { apiDelete, apiGet, apiPatch, apiPost } from "@/lib/api/client";
 import type { PaginatedResult } from "@/types/api";
+import { isBlankRichText } from "@/lib/utils/rich-text";
 import type {
   FindFlashCardsParams,
   FlashCard,
+  PronunciationLanguage,
 } from "../types/flash-card.types";
 import type { FlashCardFormValues } from "../schemas/flash-card.schema";
 
@@ -20,6 +22,16 @@ function normalizePayload<T extends Partial<FlashCardFormValues>>(
     ...payload,
     image: payload.image ? payload.image : undefined,
   };
+
+  if (normalized.type === "VOCABULARY") {
+    // En vocabulario el contenido es opcional: un editor vacío ("<p></p>")
+    // se guarda como "".
+    if (normalized.content !== undefined && isBlankRichText(normalized.content)) {
+      normalized.content = "";
+    }
+  } else if (normalized.type) {
+    normalized.vocabularyItems = undefined;
+  }
 
   if (normalized.type && normalized.type !== "ENVIRONMENTAL") {
     normalized.question = undefined;
@@ -87,5 +99,19 @@ export function uploadFlashCardImage(file: File) {
   return apiPost<{ url: string }>("/upload-files", formData, {
     params: { folder: "flash-cards" },
     headers: { "Content-Type": undefined },
+  });
+}
+
+/**
+ * Genera con IA (solo TEACHER) el MP3 de la pronunciación de una palabra y
+ * devuelve su URL, para escucharla antes de guardar la flashcard.
+ */
+export function generatePronunciation(
+  text: string,
+  language: PronunciationLanguage,
+) {
+  return apiPost<{ url: string }>("/flash-cards/pronunciations", {
+    text,
+    language: language.toUpperCase(),
   });
 }

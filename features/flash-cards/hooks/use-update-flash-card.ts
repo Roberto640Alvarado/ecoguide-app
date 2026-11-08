@@ -6,14 +6,21 @@ import { updateFlashCard } from "../api/flash-cards.api";
 import type { FlashCard } from "../types/flash-card.types";
 import type { FlashCardFormValues } from "../schemas/flash-card.schema";
 import type { ApiError } from "@/lib/api/client";
+import {
+  isMissingPronunciationAudio,
+  MISSING_PRONUNCIATION_AUDIO_MESSAGE,
+} from "../utils/pronunciation-audio";
 
 export function useUpdateFlashCard(id: string, protectedAreaId: string) {
   const queryClient = useQueryClient();
 
   return useMutation<FlashCard, ApiError, Partial<FlashCardFormValues>>({
     mutationFn: (payload) => updateFlashCard(id, payload),
-    onSuccess: () => {
+    onSuccess: (flashCard) => {
       toast.success("Flashcard actualizada correctamente.");
+      if (isMissingPronunciationAudio(flashCard)) {
+        toast.warning(MISSING_PRONUNCIATION_AUDIO_MESSAGE);
+      }
       queryClient.invalidateQueries({
         queryKey: ["flash-cards", protectedAreaId],
       });

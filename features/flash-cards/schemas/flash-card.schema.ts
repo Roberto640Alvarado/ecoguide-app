@@ -1,6 +1,32 @@
 import { z } from "zod";
 import { isBlankRichText } from "@/lib/utils/rich-text";
-import { FLASH_CARD_TYPES } from "../types/flash-card.types";
+import {
+  FLASH_CARD_TYPES,
+  VOCABULARY_ITEMS_MAX,
+  VOCABULARY_WORD_MAX_LENGTH,
+} from "../types/flash-card.types";
+
+/**
+ * Sin .min(1) por palabra: igual que `options`, una fila vacía no debe
+ * bloquear el envío de otra categoría (la sección está oculta). Se exige
+ * en el superRefine solo cuando type === "VOCABULARY".
+ */
+const vocabularyItemSchema = z.object({
+  wordEn: z
+    .string()
+    .max(
+      VOCABULARY_WORD_MAX_LENGTH,
+      `La palabra en inglés no puede superar ${VOCABULARY_WORD_MAX_LENGTH} caracteres.`,
+    ),
+  wordEs: z
+    .string()
+    .max(
+      VOCABULARY_WORD_MAX_LENGTH,
+      `La palabra en español no puede superar ${VOCABULARY_WORD_MAX_LENGTH} caracteres.`,
+    ),
+  audioEnUrl: z.string().nullable(),
+  audioEsUrl: z.string().nullable(),
+});
 
 /**
  * Espeja CreateFlashCardDto/UpdateFlashCardDto. Un único esquema para crear y
@@ -19,14 +45,10 @@ export const flashCardSchema = z
       message: "El tipo de flashcard no es válido.",
     }),
     title: z.string().min(1, "El título es requerido."),
-    // RichTextEditor guarda HTML: un editor "vacío" produce "<p></p>", que
-    // .min(1) por sí solo no detectaría como vacío.
-    content: z
-      .string()
-      .min(1, "El contenido es requerido.")
-      .refine((value) => !isBlankRichText(value), {
-        message: "El contenido es requerido.",
-      }),
+    // Requerido salvo en VOCABULARY (ver superRefine). RichTextEditor
+    // guarda HTML: un editor "vacío" produce "<p></p>", por eso se valida
+    // con isBlankRichText y no con .min(1).
+    content: z.string(),
     image: z
       .union([z.string().url("La imagen debe ser una URL válida."), z.literal("")])
       .optional(),
@@ -39,8 +61,52 @@ export const flashCardSchema = z
     // "ENVIRONMENTAL", dentro del superRefine de abajo.
     options: z.array(z.string()).optional(),
     correctAnswer: z.string().optional(),
+    vocabularyItems: z
+      .array(vocabularyItemSchema)
+      .max(
+        VOCABULARY_ITEMS_MAX,
+        `Una flashcard puede tener como máximo ${VOCABULARY_ITEMS_MAX} palabras.`,
+      ),
   })
   .superRefine((data, ctx) => {
+    if (data.type !== "VOCABULARY" && isBlankRichText(data.content)) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["content"],
+        message: "El contenido es requerido.",
+      });
+    }
+
+    if (data.type === "VOCABULARY") {
+      if (data.vocabularyItems.length === 0) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["vocabularyItems"],
+          message: "Agrega al menos una palabra de vocabulario.",
+        });
+      }
+
+      data.vocabularyItems.forEach((item, index) => {
+        if (item.wordEn.trim().length === 0) {
+          ctx.addIssue({
+            code: "custom",
+            path: ["vocabularyItems", index, "wordEn"],
+            message: "La palabra en inglés es requerida.",
+          });
+        }
+
+        if (item.wordEs.trim().length === 0) {
+          ctx.addIssue({
+            code: "custom",
+            path: ["vocabularyItems", index, "wordEs"],
+            message: "La palabra en español es requerida.",
+          });
+        }
+      });
+
+      return;
+    }
+
     if (data.type !== "ENVIRONMENTAL") {
       return;
     }

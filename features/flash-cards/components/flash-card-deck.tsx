@@ -1,14 +1,17 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import useEmblaCarousel from "embla-carousel-react";
-import { motion } from "framer-motion";
-import { BookX, ChevronLeft, ChevronRight } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { BookX, ChevronLeft, ChevronRight, Hand } from "lucide-react";
 import { useLanguageStore } from "@/store/language-store";
 import { FlashCardFinishDialog } from "./flash-card-finish-dialog";
-import { FlashCardStepper } from "./flash-card-stepper";
-import { FlashCardStudentCard } from "./flash-card-student-card";
-import type { FlashCard } from "../types/flash-card.types";
+import { FlashCardTrailProgress } from "./flash-card-trail-progress";
+import { FlashCardDeckCard } from "./flash-card-deck-card";
+import {
+  FLASH_CARD_TYPE_LABELS,
+  FLASH_CARD_TYPE_TONE,
+  type FlashCard,
+} from "../types/flash-card.types";
 
 interface FlashCardDeckProps {
   cards: FlashCard[];
@@ -18,26 +21,26 @@ interface FlashCardDeckProps {
   tourHref: string;
 }
 
+/** Cuántas tarjetas siguientes asoman detrás de la actual. */
+const STACK_PEEK = 2;
+
 /**
- * Mazo de flashcards del estudiante: un carrusel Embla (swipe nativo, igual
- * patrón que ProtectedAreaImageCarousel) con una tarjeta a la vez. Las
- * flashcards ya llegan ordenadas por categoría (`order` autoasignado en el
- * backend), así que el mazo cuenta una historia: bienvenida → gastronomía →
- * flora y fauna → quiz ambiental → dato curioso → vocabulario. En la última
- * tarjeta, "Siguiente" se reemplaza por el botón "Terminado"
- * (FlashCardFinishDialog), que celebra con confeti y deja elegir entre
- * repasar de nuevo o volver al recorrido.
+ * Mazo de flashcards del estudiante. Las tarjetas llegan ordenadas por
+ * categoría (bienvenida → gastronomía → flora y fauna → quiz ambiental →
+ * dato curioso → vocabulario) y se recorren como un mazo físico:
  *
- * Navegación: swipe (Embla), `FlashCardStepper` arriba —una caja por
- * tarjeta, con su mascota, que permite saltar a cualquier punto del mazo y
- * a la vez muestra el avance— y los botones Anterior/Siguiente abajo. Ya no
- * hay una fila de chips de categoría separada del stepper: mostraban la
- * misma información dos veces.
+ * - Sendero de progreso arriba (FlashCardTrailProgress): la mascota avanza
+ *   por el camino; cada punto salta a esa tarjeta.
+ * - Pila: detrás de la tarjeta actual asoman las siguientes, con el tono de
+ *   su categoría, para anticipar qué viene.
+ * - Pasar de tarjeta: arrastrar/deslizar la tarjeta, flechas ← → del
+ *   teclado, o los botones Anterior/Siguiente. En móvil esa barra queda
+ *   fija abajo para no tener que bajar hasta el final de tarjetas largas.
+ * - Última tarjeta: "Siguiente" se convierte en "Terminado"
+ *   (FlashCardFinishDialog, con confeti).
  *
- * El mazo vive dentro de `mx-auto w-full max-w-6xl`: ocupa el ancho
- * disponible (la tarjeta se parte en dos columnas desde `lg`), con un tope
- * en monitores muy anchos para que la línea de texto no se vuelva
- * incómoda de leer.
+ * Solo la tarjeta actual está montada; las respuestas del quiz se guardan
+ * aquí para conservarlas al ir y volver.
  */
 export function FlashCardDeck({
   cards,
@@ -45,29 +48,57 @@ export function FlashCardDeck({
   tourHref,
 }: FlashCardDeckProps) {
   const language = useLanguageStore((state) => state.language);
-  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: false });
-  const [selectedIndex, setSelectedIndex] = useState(0);
+  const reduceMotion = useReducedMotion();
+  const deckRef = useRef<HTMLDivElement>(null);
+  const hasNavigatedRef = useRef(false);
+  const [[index, direction], setPage] = useState<[number, number]>([0, 0]);
+  const [quizAnswers, setQuizAnswers] = useState<Record<string, string>>({});
 
-  const onSelect = useCallback(() => {
-    if (!emblaApi) return;
-    setSelectedIndex(emblaApi.selectedScrollSnap());
-  }, [emblaApi]);
+  const total = cards.length;
+  const isFirst = index === 0;
+  const isLast = index === total - 1;
 
+  const goTo = useCallback(
+    (next: number) => {
+      if (next < 0 || next >= total) return;
+      hasNavigatedRef.current = true;
+      setPage(([current]) =>
+        next === current ? [current, 0] : [next, next > current ? 1 : -1],
+      );
+    },
+    [total],
+  );
+
+  const goNext = useCallback(() => goTo(index + 1), [goTo, index]);
+  const goPrev = useCallback(() => goTo(index - 1), [goTo, index]);
+
+  // Flechas del teclado (salvo mientras se escribe en un campo).
   useEffect(() => {
-    if (!emblaApi) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    onSelect();
-    emblaApi.on("select", onSelect);
-    emblaApi.on("reInit", onSelect);
-    return () => {
-      emblaApi.off("select", onSelect);
-      emblaApi.off("reInit", onSelect);
-    };
-  }, [emblaApi, onSelect]);
+    function handleKeyDown(event: KeyboardEvent) {
+      const target = event.target as HTMLElement | null;
+      if (target?.closest("input, textarea, select, [contenteditable]")) return;
+      if (event.key === "ArrowRight") goNext();
+      if (event.key === "ArrowLeft") goPrev();
+    }
 
-  const cardTypes = useMemo(() => cards.map((card) => card.type), [cards]);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [goNext, goPrev]);
 
-  if (cards.length === 0) {
+  // Si el estudiante bajó para leer una tarjeta larga y pasa a la
+  // siguiente, se le regresa al inicio del mazo.
+  useEffect(() => {
+    if (!hasNavigatedRef.current) return;
+    const top = deckRef.current?.getBoundingClientRect().top ?? 0;
+    if (top < 0) {
+      deckRef.current?.scrollIntoView({
+        behavior: reduceMotion ? "auto" : "smooth",
+        block: "start",
+      });
+    }
+  }, [index, reduceMotion]);
+
+  if (total === 0) {
     return (
       <motion.div
         initial={{ opacity: 0, y: 8 }}
@@ -85,94 +116,120 @@ export function FlashCardDeck({
     );
   }
 
-  const isFirst = selectedIndex === 0;
-  const isLast = selectedIndex === cards.length - 1;
+  const card = cards[index];
+  const nextCard = cards[index + 1];
+  const peekCards = cards.slice(index + 1, index + 1 + STACK_PEEK);
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-4">
-      <FlashCardStepper
-        types={cardTypes}
-        currentIndex={selectedIndex}
-        onStepClick={(index) => emblaApi?.scrollTo(index)}
+    <div
+      ref={deckRef}
+      className="mx-auto flex w-full max-w-6xl scroll-mt-4 flex-col gap-5"
+    >
+      <FlashCardTrailProgress
+        types={cards.map((deckCard) => deckCard.type)}
+        currentIndex={index}
+        onStepClick={goTo}
       />
 
-      <div className="relative min-w-0">
-        <div className="min-w-0 overflow-hidden" ref={emblaRef}>
-          <div className="flex items-stretch">
-            {cards.map((card, index) => (
-              <div key={card.id} className="flex min-w-0 flex-[0_0_100%] px-0.5">
-                <FlashCardStudentCard
-                  card={card}
-                  isActive={index === selectedIndex}
-                />
-              </div>
-            ))}
-          </div>
-        </div>
+      <section
+        aria-roledescription={language === "en" ? "card deck" : "mazo de tarjetas"}
+        aria-label={
+          language === "en"
+            ? `Card ${index + 1} of ${total}`
+            : `Tarjeta ${index + 1} de ${total}`
+        }
+        className="relative grid pb-5"
+      >
+        {/* Tarjetas siguientes asomando por debajo (solo decorativas). */}
+        {peekCards
+          .map((peekCard, position) => ({ peekCard, depth: position + 1 }))
+          .reverse()
+          .map(({ peekCard, depth }) => (
+            <div
+              key={peekCard.id}
+              aria-hidden="true"
+              className="absolute inset-x-0 bottom-5 top-0 overflow-hidden rounded-[1.75rem] border border-border bg-surface shadow-md transition-transform duration-300"
+              style={{
+                transform: `translateY(${depth * 12}px) scale(${1 - depth * 0.04})`,
+                opacity: 1 - depth * 0.3,
+              }}
+            >
+              {/* Borde inferior con el tono de la categoría que viene. */}
+              <span
+                className={`absolute inset-x-0 bottom-0 h-3 ${FLASH_CARD_TYPE_TONE[peekCard.type].chipBg}`}
+              />
+            </div>
+          ))}
 
-        {/* Flechas solo en mobile/tablet: ahí la tarjeta es tan alta que los
-            botones Anterior/Siguiente del final quedan fuera de pantalla, y
-            el swipe no es una afordancia visible. Van centradas sobre la
-            franja de la mascota, que en mobile tiene alto fijo (h-56 en
-            FlashCardStudentCard) — por eso el offset `top-28` es estable
-            para todas las tarjetas, sin importar cuánto texto traigan.
-            Desde `lg` se ocultan: ahí la tarjeta es horizontal y los
-            botones de abajo ya quedan a la vista. */}
-        {!isFirst && (
-          <motion.button
-            type="button"
-            onClick={() => emblaApi?.scrollPrev()}
-            aria-label={language === "en" ? "Previous card" : "Tarjeta anterior"}
-            whileTap={{ scale: 0.9 }}
-            className="absolute left-3 top-28 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-surface/90 text-foreground shadow-md backdrop-blur-sm lg:hidden"
-          >
-            <ChevronLeft className="h-5 w-5" aria-hidden="true" />
-          </motion.button>
-        )}
-        {!isLast && (
-          <motion.button
-            type="button"
-            onClick={() => emblaApi?.scrollNext()}
-            aria-label={language === "en" ? "Next card" : "Siguiente tarjeta"}
-            whileTap={{ scale: 0.9 }}
-            className="absolute right-3 top-28 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-surface/90 text-foreground shadow-md backdrop-blur-sm lg:hidden"
-          >
-            <ChevronRight className="h-5 w-5" aria-hidden="true" />
-          </motion.button>
-        )}
-      </div>
+        <AnimatePresence initial={false} custom={direction} mode="popLayout">
+          <FlashCardDeckCard
+            key={card.id}
+            card={card}
+            direction={direction}
+            canGoNext={!isLast}
+            canGoPrev={!isFirst}
+            onSwipe={(swipe) => (swipe > 0 ? goNext() : goPrev())}
+            quizAnswer={quizAnswers[card.id] ?? null}
+            onQuizAnswer={(option) =>
+              setQuizAnswers((answers) => ({ ...answers, [card.id]: option }))
+            }
+          />
+        </AnimatePresence>
+      </section>
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="sticky bottom-3 z-20 flex items-center gap-2 rounded-2xl border border-border bg-surface/90 p-2 shadow-lg backdrop-blur-md sm:static sm:gap-4 sm:border-0 sm:bg-transparent sm:p-0 sm:shadow-none sm:backdrop-blur-none">
         <motion.button
           type="button"
           disabled={isFirst}
-          onClick={() => emblaApi?.scrollPrev()}
-          whileHover={!isFirst ? { x: -2 } : undefined}
-          whileTap={!isFirst ? { scale: 0.96 } : undefined}
-          className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-border bg-surface px-5 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-layer-hover disabled:pointer-events-none disabled:opacity-40 sm:min-w-40"
+          onClick={goPrev}
+          whileTap={!isFirst ? { scale: 0.94 } : undefined}
+          aria-label={language === "en" ? "Previous card" : "Tarjeta anterior"}
+          className="inline-flex h-12 shrink-0 items-center justify-center gap-1.5 rounded-xl border border-border bg-surface px-4 text-sm font-medium text-foreground transition-colors hover:bg-layer-hover focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-40 sm:min-w-36"
         >
-          <ChevronLeft className="h-4 w-4" aria-hidden="true" />
-          {language === "en" ? "Previous" : "Anterior"}
+          <ChevronLeft className="size-5" aria-hidden="true" />
+          <span className="hidden sm:inline">
+            {language === "en" ? "Previous" : "Anterior"}
+          </span>
         </motion.button>
 
-        {isLast ? (
-          <FlashCardFinishDialog
-            protectedAreaId={protectedAreaId}
-            tourHref={tourHref}
-            onReview={() => emblaApi?.scrollTo(0)}
-          />
-        ) : (
-          <motion.button
-            type="button"
-            onClick={() => emblaApi?.scrollNext()}
-            whileHover={{ x: 2 }}
-            whileTap={{ scale: 0.96 }}
-            className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-accent px-5 py-2.5 text-sm font-medium text-accent-foreground transition-colors hover:bg-accent-hover sm:min-w-40"
-          >
-            {language === "en" ? "Next" : "Siguiente"}
-            <ChevronRight className="h-4 w-4" aria-hidden="true" />
-          </motion.button>
-        )}
+        <p className="hidden flex-1 items-center justify-center gap-2 text-center text-xs text-muted sm:flex">
+          <Hand className="size-4 shrink-0" aria-hidden="true" />
+          {language === "en"
+            ? "Drag the card or use the ← → keys"
+            : "Arrastra la tarjeta o usa las teclas ← →"}
+        </p>
+
+        <div className="flex flex-1 sm:flex-none">
+          {isLast ? (
+            <FlashCardFinishDialog
+              protectedAreaId={protectedAreaId}
+              tourHref={tourHref}
+              onReview={() => goTo(0)}
+            />
+          ) : (
+            <motion.button
+              type="button"
+              onClick={goNext}
+              whileTap={{ scale: 0.97 }}
+              className="group inline-flex h-12 w-full items-center justify-between gap-3 rounded-xl bg-primary px-4 text-left text-primary-foreground shadow-sm transition-colors hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 sm:min-w-56"
+            >
+              <span className="flex min-w-0 flex-col leading-tight">
+                <span className="text-sm font-semibold">
+                  {language === "en" ? "Next" : "Siguiente"}
+                </span>
+                {nextCard && (
+                  <span className="truncate text-xs opacity-80">
+                    {FLASH_CARD_TYPE_LABELS[nextCard.type][language]}
+                  </span>
+                )}
+              </span>
+              <ChevronRight
+                className="size-5 shrink-0 transition-transform group-hover:translate-x-0.5"
+                aria-hidden="true"
+              />
+            </motion.button>
+          )}
+        </div>
       </div>
     </div>
   );
